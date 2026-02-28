@@ -36,42 +36,45 @@ function decodeJwt(token: string): TokenPayload | null {
     }
 }
 
+interface AuthState {
+    user: User | null;
+    token: string | null;
+    isLoading: boolean;
+}
+
+function getInitialAuthState(): AuthState {
+    if (typeof window === "undefined") return { user: null, token: null, isLoading: true };
+
+    const accessToken = localStorage.getItem(TOKEN_KEY);
+    if (!accessToken) return { user: null, token: null, isLoading: false };
+
+    const payload = decodeJwt(accessToken);
+    if (!payload || payload.exp * 1000 < Date.now()) {
+        localStorage.removeItem(TOKEN_KEY);
+        return { user: null, token: null, isLoading: false };
+    }
+
+    return {
+        user: { id: payload.sub, email: payload.email, name: payload.name, role: payload.role },
+        token: accessToken,
+        isLoading: false,
+    };
+}
+
 export function useAuth({ redirectTo = "/sign-in" }: { redirectTo?: string } = {}) {
     const router = useRouter();
-    const [user, setUser] = useState<User | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [token, setToken] = useState<string | null>(null);
+    const [authState] = useState<AuthState>(getInitialAuthState);
 
     useEffect(() => {
-        const accessToken = localStorage.getItem(TOKEN_KEY);
-
-        if (!accessToken) {
+        if (!authState.isLoading && !authState.user) {
             router.replace(redirectTo);
-            return;
         }
-
-        const payload = decodeJwt(accessToken);
-
-        if (!payload || payload.exp * 1000 < Date.now()) {
-            localStorage.removeItem(TOKEN_KEY);
-            router.replace(redirectTo);
-            return;
-        }
-
-        setUser({
-            id: payload.sub,
-            email: payload.email,
-            name: payload.name,
-            role: payload.role,
-        });
-        setToken(accessToken);
-        setIsLoading(false);
-    }, [router, redirectTo]);
+    }, [authState.isLoading, authState.user, router, redirectTo]);
 
     const logout = () => {
         localStorage.removeItem(TOKEN_KEY);
         router.replace("/sign-in");
     };
 
-    return { user, isLoading, token, logout };
+    return { user: authState.user, isLoading: authState.isLoading, token: authState.token, logout };
 }

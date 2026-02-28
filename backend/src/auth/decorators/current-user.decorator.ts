@@ -7,18 +7,18 @@ import { AuthenticatedUser } from '../interfaces/index.js';
  * Usage: @CurrentUser() user: { id: string; email: string; role: string }
  */
 export const CurrentUser = createParamDecorator(
-    (
-        data: keyof AuthenticatedUser | undefined,
-        ctx: ExecutionContext,
-    ):
-        | AuthenticatedUser
-        | AuthenticatedUser[keyof AuthenticatedUser]
-        | undefined => {
-        const request = ctx.switchToHttp().getRequest<Request>();
-        const user = request.user as AuthenticatedUser | undefined;
-        if (!user) {
-            return undefined;
-        }
-        return data ? user[data] : user;
-    },
+  (
+    data: keyof AuthenticatedUser | undefined,
+    ctx: ExecutionContext,
+  ):
+    | AuthenticatedUser
+    | AuthenticatedUser[keyof AuthenticatedUser]
+    | undefined => {
+    const request = ctx.switchToHttp().getRequest<Request>();
+    const user = request.user as AuthenticatedUser | undefined;
+    if (!user) {
+      return undefined;
+    }
+    return data ? user[data] : user;
+  },
 );

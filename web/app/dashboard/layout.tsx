@@ -15,6 +15,9 @@ import {
     Menu,
     X,
     ChevronRight,
+    Users,
+    BarChart3,
+    ShieldCheck,
 } from "lucide-react";
 
 import { useAuth } from "@/hooks/use-auth";
@@ -36,13 +39,21 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const navItems = [
-    { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+const memberNavItems = [
+    { label: "Dashboard", href: "/dashboard/member", icon: LayoutDashboard },
     { label: "Workouts", href: "/dashboard/workouts", icon: Dumbbell },
     { label: "Schedule", href: "/dashboard/schedule", icon: Calendar },
     { label: "Progress", href: "/dashboard/progress", icon: TrendingUp },
     { label: "Profile", href: "/dashboard/profile", icon: User },
     { label: "Settings", href: "/dashboard/settings", icon: Settings },
+];
+
+const adminNavItems = [
+    { label: "Overview", href: "/dashboard/admin", icon: LayoutDashboard },
+    { label: "Members", href: "/dashboard/admin/members", icon: Users },
+    { label: "Analytics", href: "/dashboard/admin/analytics", icon: BarChart3 },
+    { label: "Schedules", href: "/dashboard/admin/schedules", icon: Calendar },
+    { label: "Settings", href: "/dashboard/admin/settings", icon: Settings },
 ];
 
 const sidebarVariants = {
@@ -59,8 +70,9 @@ const navItemVariants = {
     visible: { x: 0, opacity: 1, transition: { duration: 0.3 } },
 };
 
-function SidebarNav({ collapsed, onNavigate }: { collapsed?: boolean; onNavigate?: () => void }) {
+function SidebarNav({ collapsed, onNavigate, role }: { collapsed?: boolean; onNavigate?: () => void; role?: string }) {
     const pathname = usePathname();
+    const navItems = role === "ADMIN" ? adminNavItems : memberNavItems;
 
     return (
         <TooltipProvider delayDuration={0}>
@@ -124,6 +136,7 @@ export default function DashboardLayout({
     const { user, isLoading, logout } = useAuth();
     const pathname = usePathname();
     const [mobileOpen, setMobileOpen] = useState(false);
+    const isAdmin = user?.role === "ADMIN";
 
     if (isLoading) {
         return (
@@ -179,14 +192,22 @@ export default function DashboardLayout({
                         >
                             <Dumbbell className="h-8 w-8 text-primary" strokeWidth={1.5} />
                         </motion.div>
-                        <span className="text-xl font-bold tracking-tight">GYM</span>
+                        <div>
+                            <span className="text-xl font-bold tracking-tight">GYM</span>
+                            {isAdmin && (
+                                <div className="flex items-center gap-1 text-xs text-primary">
+                                    <ShieldCheck className="h-3 w-3" />
+                                    <span>Admin</span>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     <Separator />
 
                     {/* Navigation */}
                     <div className="flex-1 px-3 py-4">
-                        <SidebarNav />
+                        <SidebarNav role={user?.role} />
                     </div>
 
                     <Separator />
@@ -266,7 +287,7 @@ export default function DashboardLayout({
                             </div>
                             <Separator />
                             <div className="px-3 py-4">
-                                <SidebarNav onNavigate={() => setMobileOpen(false)} />
+                                <SidebarNav onNavigate={() => setMobileOpen(false)} role={user?.role} />
                             </div>
                         </SheetContent>
                     </Sheet>

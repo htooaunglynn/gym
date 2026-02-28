@@ -1,12 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion, type Variants } from "framer-motion";
+import { motion } from "framer-motion";
 import {
     Flame,
     Dumbbell,
     Timer,
-    TrendingUp,
     Zap,
     Trophy,
     Target,
@@ -20,38 +18,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
-
-/* ------------------------------------------------------------------ */
-/*  Animation variants                                                 */
-/* ------------------------------------------------------------------ */
-
-const containerVariants: Variants = {
-    hidden: { opacity: 0 },
-    visible: {
-        opacity: 1,
-        transition: { staggerChildren: 0.08, delayChildren: 0.1 },
-    },
-};
-
-const itemVariants: Variants = {
-    hidden: { opacity: 0, y: 24 },
-    visible: {
-        opacity: 1,
-        y: 0,
-        transition: { duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] },
-    },
-};
-
-const scaleIn: Variants = {
-    hidden: { opacity: 0, scale: 0.9 },
-    visible: {
-        opacity: 1,
-        scale: 1,
-        transition: { duration: 0.4, ease: "easeOut" },
-    },
-};
+import { containerVariants, itemVariants, scaleIn } from "@/lib/animations";
 
 /* ------------------------------------------------------------------ */
 /*  Mock data (replace with real API later)                            */
@@ -134,32 +103,7 @@ const achievements = [
 /*  Components                                                         */
 /* ------------------------------------------------------------------ */
 
-function AnimatedCounter({ value, duration = 1.5 }: { value: number; duration?: number }) {
-    const [count, setCount] = useState(0);
-
-    useEffect(() => {
-        let start = 0;
-        const end = value;
-        const stepTime = Math.max(duration * 1000 / end, 10);
-        const increment = Math.ceil(end / (duration * 60));
-
-        const timer = setInterval(() => {
-            start += increment;
-            if (start >= end) {
-                setCount(end);
-                clearInterval(timer);
-            } else {
-                setCount(start);
-            }
-        }, stepTime);
-
-        return () => clearInterval(timer);
-    }, [value, duration]);
-
-    return <>{count.toLocaleString()}</>;
-}
-
-function ActivityBar({ day, value, label, index }: { day: string; value: number; label: string; index: number }) {
+function ActivityBar({ day, value, index }: { day: string; value: number; label: string; index: number }) {
     return (
         <motion.div
             className="flex flex-col items-center gap-2"
@@ -170,12 +114,12 @@ function ActivityBar({ day, value, label, index }: { day: string; value: number;
             <div className="relative h-28 w-8 overflow-hidden rounded-full bg-muted">
                 <motion.div
                     className={`absolute bottom-0 w-full rounded-full ${value === 0
-                            ? "bg-muted-foreground/20"
-                            : value > 80
-                                ? "bg-gradient-to-t from-emerald-500 to-teal-400"
-                                : value > 50
-                                    ? "bg-gradient-to-t from-blue-500 to-indigo-400"
-                                    : "bg-gradient-to-t from-amber-500 to-yellow-400"
+                        ? "bg-muted-foreground/20"
+                        : value > 80
+                            ? "bg-gradient-to-t from-emerald-500 to-teal-400"
+                            : value > 50
+                                ? "bg-gradient-to-t from-blue-500 to-indigo-400"
+                                : "bg-gradient-to-t from-amber-500 to-yellow-400"
                         }`}
                     initial={{ height: 0 }}
                     animate={{ height: `${Math.max(value, 5)}%` }}
@@ -191,7 +135,7 @@ function ActivityBar({ day, value, label, index }: { day: string; value: number;
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
 
-export default function DashboardPage() {
+export default function MemberDashboardPage() {
     const { user } = useAuth();
 
     const greeting = (() => {
@@ -406,10 +350,10 @@ export default function DashboardPage() {
                                         <div className="flex items-center gap-3">
                                             <motion.div
                                                 className={`flex h-10 w-10 items-center justify-center rounded-lg ${workout.type === "Strength"
-                                                        ? "bg-blue-500/10 text-blue-500"
-                                                        : workout.type === "Cardio"
-                                                            ? "bg-red-500/10 text-red-500"
-                                                            : "bg-purple-500/10 text-purple-500"
+                                                    ? "bg-blue-500/10 text-blue-500"
+                                                    : workout.type === "Cardio"
+                                                        ? "bg-red-500/10 text-red-500"
+                                                        : "bg-purple-500/10 text-purple-500"
                                                     }`}
                                                 whileHover={{ scale: 1.1 }}
                                             >
@@ -468,14 +412,14 @@ export default function DashboardPage() {
                                         animate={{ opacity: 1, scale: 1 }}
                                         transition={{ delay: 0.5 + i * 0.1 }}
                                         className={`flex items-start gap-3 rounded-lg border p-3.5 transition-all ${achievement.earned
-                                                ? "border-amber-500/30 bg-amber-500/5"
-                                                : "opacity-60"
+                                            ? "border-amber-500/30 bg-amber-500/5"
+                                            : "opacity-60"
                                             }`}
                                     >
                                         <motion.div
                                             className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${achievement.earned
-                                                    ? "bg-amber-500/10 text-amber-500"
-                                                    : "bg-muted text-muted-foreground"
+                                                ? "bg-amber-500/10 text-amber-500"
+                                                : "bg-muted text-muted-foreground"
                                                 }`}
                                             whileHover={
                                                 achievement.earned
