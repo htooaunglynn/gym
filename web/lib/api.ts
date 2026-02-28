@@ -1,10 +1,12 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
-
-if (!API_URL) {
-    throw new Error(
-        "NEXT_PUBLIC_API_URL is not defined. Please add it to your .env.local file."
-    );
-}
+const getApiUrl = () => {
+    const url = process.env.NEXT_PUBLIC_API_URL;
+    if (!url) {
+        throw new Error(
+            "NEXT_PUBLIC_API_URL is not defined. Please add it to your .env.local file."
+        );
+    }
+    return url;
+};
 
 interface ApiError {
     message: string;
@@ -33,8 +35,9 @@ async function request<T>(
     options: RequestInit & RequestOptions = {}
 ): Promise<T> {
     const { headers, ...rest } = options;
+    const apiUrl = getApiUrl();
 
-    const res = await fetch(`${API_URL}${endpoint}`, {
+    const res = await fetch(`${apiUrl}${endpoint}`, {
         headers: {
             "Content-Type": "application/json",
             ...headers,
