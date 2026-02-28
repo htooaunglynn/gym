@@ -1,8 +1,8 @@
 import {
-  CanActivate,
-  ExecutionContext,
-  Injectable,
-  UnauthorizedException,
+    CanActivate,
+    ExecutionContext,
+    Injectable,
+    UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from '../../auth/decorators/index.js';
@@ -14,28 +14,30 @@ import { IS_PUBLIC_KEY } from '../../auth/decorators/index.js';
  */
 @Injectable()
 export class ApiKeyGuard implements CanActivate {
-  constructor(private readonly reflector: Reflector) {}
+    constructor(private readonly reflector: Reflector) { }
 
-  canActivate(context: ExecutionContext): boolean {
-    const apiKey = process.env.API_KEY;
-    if (!apiKey) {
-      return true; // guard disabled when no API_KEY is configured
+    canActivate(context: ExecutionContext): boolean {
+        const apiKey = process.env.API_KEY;
+        if (!apiKey) {
+            return true; // guard disabled when no API_KEY is configured
+        }
+
+        const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+            context.getHandler(),
+            context.getClass(),
+        ]);
+        if (isPublic) {
+            return true;
+        }
+
+        const request = context
+            .switchToHttp()
+            .getRequest<import('express').Request>();
+        const headerKey = request.headers['x-api-key'];
+
+        if (headerKey !== apiKey) {
+            throw new UnauthorizedException('Invalid or missing API key');
+        }
+        return true;
     }
-
-    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
-    if (isPublic) {
-      return true;
-    }
-
-    const request = context.switchToHttp().getRequest();
-    const headerKey = request.headers['x-api-key'];
-
-    if (headerKey !== apiKey) {
-      throw new UnauthorizedException('Invalid or missing API key');
-    }
-    return true;
-  }
 }
