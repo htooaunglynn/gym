@@ -1,4 +1,5 @@
 import type { Role } from '../../prisma/prisma.service.js';
+export type { Role } from '../../prisma/prisma.service.js';
 
 /** Payload encoded inside the JWT token. */
 export interface JwtPayload {
