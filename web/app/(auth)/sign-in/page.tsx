@@ -10,15 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authApi } from "@/lib/auth";
-
-const formItemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: (i: number) => ({
-        opacity: 1,
-        y: 0,
-        transition: { delay: i * 0.1, duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] as const },
-    }),
-};
+import { TOKEN_KEY } from "@/lib/constants";
+import { formItemVariants } from "@/lib/animations";
+import { parseApiError } from "@/lib/utils";
 
 export default function SignInPage() {
     const router = useRouter();
@@ -48,15 +42,11 @@ export default function SignInPage() {
             });
 
             // Store the token
-            localStorage.setItem("access_token", data.access_token);
+            localStorage.setItem(TOKEN_KEY, data.accessToken);
 
             router.push("/dashboard");
         } catch (err: unknown) {
-            const apiErr = err as { message?: string | string[] };
-            const msg = Array.isArray(apiErr.message)
-                ? apiErr.message[0]
-                : apiErr.message || "Invalid email or password";
-            setError(msg);
+            setError(parseApiError(err, "Invalid email or password"));
         } finally {
             setIsLoading(false);
         }

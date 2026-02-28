@@ -10,15 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authApi } from "@/lib/auth";
-
-const formItemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: (i: number) => ({
-        opacity: 1,
-        y: 0,
-        transition: { delay: i * 0.1, duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] as const },
-    }),
-};
+import { formItemVariants } from "@/lib/animations";
+import { parseApiError } from "@/lib/utils";
 
 export default function SignUpPage() {
     const router = useRouter();
@@ -53,11 +46,7 @@ export default function SignUpPage() {
             setSuccess(true);
             setTimeout(() => router.push("/sign-in"), 1500);
         } catch (err: unknown) {
-            const apiErr = err as { message?: string | string[] };
-            const msg = Array.isArray(apiErr.message)
-                ? apiErr.message[0]
-                : apiErr.message || "Something went wrong";
-            setError(msg);
+            setError(parseApiError(err));
         } finally {
             setIsLoading(false);
         }
@@ -192,8 +181,8 @@ export default function SignUpPage() {
                                                 <motion.div
                                                     key={level}
                                                     className={`h-1.5 flex-1 rounded-full ${passwordStrength >= level
-                                                            ? strengthColors[passwordStrength]
-                                                            : "bg-muted"
+                                                        ? strengthColors[passwordStrength]
+                                                        : "bg-muted"
                                                         }`}
                                                     initial={{ scaleX: 0 }}
                                                     animate={{ scaleX: 1 }}

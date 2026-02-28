@@ -1,7 +1,7 @@
-import { api } from "./api";
+import { api, type ApiEnvelope } from "./api";
 
 export interface AuthResponse {
-    access_token: string;
+    accessToken: string;
 }
 
 export interface SignUpPayload {
@@ -17,8 +17,8 @@ export interface SignInPayload {
 
 export const authApi = {
     signUp: (payload: SignUpPayload) =>
-        api.post<AuthResponse>("/auth/sign-up", payload),
+        api.post<ApiEnvelope<AuthResponse>>("/auth/sign-up", payload).then((res) => res.data),
 
     signIn: (payload: SignInPayload) =>
-        api.post<AuthResponse>("/auth/sign-in", payload),
+        api.post<ApiEnvelope<AuthResponse>>("/auth/sign-in", payload).then((res) => res.data),
 };

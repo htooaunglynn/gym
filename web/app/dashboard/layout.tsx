@@ -79,8 +79,8 @@ function SidebarNav({ collapsed, onNavigate }: { collapsed?: boolean; onNavigate
                             href={item.href}
                             onClick={onNavigate}
                             className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ${isActive
-                                    ? "bg-primary text-primary-foreground shadow-md"
-                                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                                ? "bg-primary text-primary-foreground shadow-md"
+                                : "text-muted-foreground hover:bg-accent hover:text-foreground"
                                 }`}
                         >
                             {isActive && (
@@ -122,6 +122,7 @@ export default function DashboardLayout({
     children: React.ReactNode;
 }) {
     const { user, isLoading, logout } = useAuth();
+    const pathname = usePathname();
     const [mobileOpen, setMobileOpen] = useState(false);
 
     if (isLoading) {
@@ -305,7 +306,7 @@ export default function DashboardLayout({
                 <main className="flex-1">
                     <AnimatePresence mode="wait">
                         <motion.div
-                            key={typeof window !== "undefined" ? window.location.pathname : ""}
+                            key={pathname}
                             initial={{ opacity: 0, y: 8 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -8 }}

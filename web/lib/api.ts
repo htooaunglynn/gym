@@ -13,6 +13,14 @@ interface ApiError {
     statusCode: number;
 }
 
+/** Standard response envelope returned by every backend endpoint. */
+export interface ApiEnvelope<T> {
+    statusCode: number;
+    message: string;
+    data: T;
+    timestamp: string;
+}
+
 interface RequestOptions {
     headers?: Record<string, string>;
 }

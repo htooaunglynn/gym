@@ -5,6 +5,7 @@ export type { Role } from '../../prisma/prisma.service.js';
 export interface JwtPayload {
     sub: string;
     email: string;
+    name: string | null;
     role: Role;
 }
 
@@ -12,5 +13,6 @@ export interface JwtPayload {
 export interface AuthenticatedUser {
     id: string;
     email: string;
+    name: string | null;
     role: Role;
 }

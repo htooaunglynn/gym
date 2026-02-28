@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { TOKEN_KEY } from "@/lib/constants";
 
 export interface User {
     id: string;
@@ -42,7 +43,7 @@ export function useAuth({ redirectTo = "/sign-in" }: { redirectTo?: string } = {
     const [token, setToken] = useState<string | null>(null);
 
     useEffect(() => {
-        const accessToken = localStorage.getItem("access_token");
+        const accessToken = localStorage.getItem(TOKEN_KEY);
 
         if (!accessToken) {
             router.replace(redirectTo);
@@ -52,7 +53,7 @@ export function useAuth({ redirectTo = "/sign-in" }: { redirectTo?: string } = {
         const payload = decodeJwt(accessToken);
 
         if (!payload || payload.exp * 1000 < Date.now()) {
-            localStorage.removeItem("access_token");
+            localStorage.removeItem(TOKEN_KEY);
             router.replace(redirectTo);
             return;
         }
@@ -68,7 +69,7 @@ export function useAuth({ redirectTo = "/sign-in" }: { redirectTo?: string } = {
     }, [router, redirectTo]);
 
     const logout = () => {
-        localStorage.removeItem("access_token");
+        localStorage.removeItem(TOKEN_KEY);
         router.replace("/sign-in");
     };
 
