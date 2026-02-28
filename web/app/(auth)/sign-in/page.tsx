@@ -50,7 +50,7 @@ export default function SignInPage() {
             // Store the token
             localStorage.setItem("access_token", data.access_token);
 
-            router.push("/");
+            router.push("/dashboard");
         } catch (err: unknown) {
             const apiErr = err as { message?: string | string[] };
             const msg = Array.isArray(apiErr.message)
