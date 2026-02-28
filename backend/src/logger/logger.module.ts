@@ -1,8 +1,6 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule as PinoLoggerModule } from 'nestjs-pino';
 
-const isProduction = process.env.NODE_ENV === 'production';
-
 @Module({
     imports: [
         PinoLoggerModule.forRoot({
@@ -21,19 +19,17 @@ const isProduction = process.env.NODE_ENV === 'production';
                 // Redact sensitive headers
                 redact: ['req.headers.authorization', 'req.headers.cookie'],
 
-                transport: isProduction
-                    ? undefined // raw JSON in production (for log aggregators)
-                    : {
-                        target: 'pino-pretty',
-                        options: {
-                            colorize: true,
-                            translateTime: 'SYS:yyyy-mm-dd HH:MM:ss.l',
-                            ignore: 'pid,hostname',
-                            singleLine: false,
-                        },
+                transport: {
+                    target: 'pino-pretty',
+                    options: {
+                        colorize: true,
+                        translateTime: 'SYS:yyyy-mm-dd HH:MM:ss.l',
+                        ignore: 'pid,hostname',
+                        singleLine: false,
                     },
+                },
 
-                level: isProduction ? 'info' : 'debug',
+                level: 'debug',
             },
         }),
     ],
