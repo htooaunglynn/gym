@@ -3,37 +3,13 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { TOKEN_KEY } from "@/lib/constants";
+import { decodeJwt } from "@/lib/jwt";
 
 export interface User {
     id: string;
     email: string;
     name: string | null;
     role: string;
-}
-
-interface TokenPayload {
-    sub: string;
-    email: string;
-    name: string | null;
-    role: string;
-    iat: number;
-    exp: number;
-}
-
-function decodeJwt(token: string): TokenPayload | null {
-    try {
-        const base64Url = token.split(".")[1];
-        const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-        const jsonPayload = decodeURIComponent(
-            atob(base64)
-                .split("")
-                .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-                .join("")
-        );
-        return JSON.parse(jsonPayload);
-    } catch {
-        return null;
-    }
 }
 
 interface AuthState {

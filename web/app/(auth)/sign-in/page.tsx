@@ -12,19 +12,8 @@ import { Label } from "@/components/ui/label";
 import { authApi } from "@/lib/auth";
 import { TOKEN_KEY } from "@/lib/constants";
 import { formItemVariants } from "@/lib/animations";
+import { getRoleFromToken } from "@/lib/jwt";
 import { parseApiError } from "@/lib/utils";
-
-function getRoleFromToken(token: string): string | null {
-    try {
-        const base64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
-        const payload = JSON.parse(decodeURIComponent(
-            atob(base64).split("").map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2)).join("")
-        ));
-        return payload.role ?? null;
-    } catch {
-        return null;
-    }
-}
 
 export default function SignInPage() {
     const router = useRouter();

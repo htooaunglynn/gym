@@ -6,17 +6,11 @@ import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Dumbbell,
-    LayoutDashboard,
-    Calendar,
-    TrendingUp,
     User,
     Settings,
     LogOut,
     Menu,
     X,
-    ChevronRight,
-    Users,
-    BarChart3,
     ShieldCheck,
 } from "lucide-react";
 
@@ -26,107 +20,13 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-const memberNavItems = [
-    { label: "Dashboard", href: "/dashboard/member", icon: LayoutDashboard },
-    { label: "Workouts", href: "/dashboard/workouts", icon: Dumbbell },
-    { label: "Schedule", href: "/dashboard/schedule", icon: Calendar },
-    { label: "Progress", href: "/dashboard/progress", icon: TrendingUp },
-    { label: "Profile", href: "/dashboard/profile", icon: User },
-    { label: "Settings", href: "/dashboard/settings", icon: Settings },
-];
-
-const adminNavItems = [
-    { label: "Overview", href: "/dashboard/admin", icon: LayoutDashboard },
-    { label: "Members", href: "/dashboard/admin/members", icon: Users },
-    { label: "Analytics", href: "/dashboard/admin/analytics", icon: BarChart3 },
-    { label: "Schedules", href: "/dashboard/admin/schedules", icon: Calendar },
-    { label: "Settings", href: "/dashboard/admin/settings", icon: Settings },
-];
-
-const sidebarVariants = {
-    hidden: { x: -20, opacity: 0 },
-    visible: {
-        x: 0,
-        opacity: 1,
-        transition: { staggerChildren: 0.06, delayChildren: 0.2 },
-    },
-};
-
-const navItemVariants = {
-    hidden: { x: -20, opacity: 0 },
-    visible: { x: 0, opacity: 1, transition: { duration: 0.3 } },
-};
-
-function SidebarNav({ collapsed, onNavigate, role }: { collapsed?: boolean; onNavigate?: () => void; role?: string }) {
-    const pathname = usePathname();
-    const navItems = role === "ADMIN" ? adminNavItems : memberNavItems;
-
-    return (
-        <TooltipProvider delayDuration={0}>
-            <motion.nav
-                variants={sidebarVariants}
-                initial="hidden"
-                animate="visible"
-                className="flex flex-col gap-1"
-            >
-                {navItems.map((item) => {
-                    const isActive = pathname === item.href;
-                    const Icon = item.icon;
-
-                    const linkContent = (
-                        <Link
-                            href={item.href}
-                            onClick={onNavigate}
-                            className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ${isActive
-                                ? "bg-primary text-primary-foreground shadow-md"
-                                : "text-muted-foreground hover:bg-accent hover:text-foreground"
-                                }`}
-                        >
-                            {isActive && (
-                                <motion.div
-                                    layoutId="activeNav"
-                                    className="absolute inset-0 rounded-lg bg-primary"
-                                    transition={{ type: "spring", stiffness: 350, damping: 30 }}
-                                />
-                            )}
-                            <Icon className={`relative z-10 h-5 w-5 shrink-0 ${isActive ? "text-primary-foreground" : ""}`} />
-                            {!collapsed && <span className="relative z-10">{item.label}</span>}
-                            {!collapsed && isActive && (
-                                <ChevronRight className="relative z-10 ml-auto h-4 w-4" />
-                            )}
-                        </Link>
-                    );
-
-                    return (
-                        <motion.div key={item.href} variants={navItemVariants}>
-                            {collapsed ? (
-                                <Tooltip>
-                                    <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
-                                    <TooltipContent side="right">{item.label}</TooltipContent>
-                                </Tooltip>
-                            ) : (
-                                linkContent
-                            )}
-                        </motion.div>
-                    );
-                })}
-            </motion.nav>
-        </TooltipProvider>
-    );
-}
+import { SidebarNav } from "./_components/sidebar-nav";
 
 export default function DashboardLayout({
     children,

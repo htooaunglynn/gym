@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import {
     Flame,
     Dumbbell,
-    Timer,
     Zap,
     Trophy,
     Target,
@@ -21,115 +20,14 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
 import { containerVariants, itemVariants, scaleIn } from "@/lib/animations";
-
-/* ------------------------------------------------------------------ */
-/*  Mock data (replace with real API later)                            */
-/* ------------------------------------------------------------------ */
-
-const stats = [
-    {
-        title: "Calories Burned",
-        value: "2,847",
-        change: "+12.5%",
-        trend: "up" as const,
-        icon: Flame,
-        color: "from-orange-500 to-red-500",
-        bgColor: "bg-orange-500/10",
-        textColor: "text-orange-600 dark:text-orange-400",
-    },
-    {
-        title: "Workouts Done",
-        value: "18",
-        change: "+3",
-        trend: "up" as const,
-        icon: Dumbbell,
-        color: "from-blue-500 to-indigo-500",
-        bgColor: "bg-blue-500/10",
-        textColor: "text-blue-600 dark:text-blue-400",
-    },
-    {
-        title: "Active Minutes",
-        value: "842",
-        change: "+8.2%",
-        trend: "up" as const,
-        icon: Timer,
-        color: "from-emerald-500 to-teal-500",
-        bgColor: "bg-emerald-500/10",
-        textColor: "text-emerald-600 dark:text-emerald-400",
-    },
-    {
-        title: "Streak",
-        value: "12 days",
-        change: "Best: 21",
-        trend: "up" as const,
-        icon: Zap,
-        color: "from-amber-500 to-yellow-500",
-        bgColor: "bg-amber-500/10",
-        textColor: "text-amber-600 dark:text-amber-400",
-    },
-];
-
-const recentWorkouts = [
-    { name: "Morning Push Day", duration: "52 min", calories: 380, type: "Strength", time: "Today", intensity: 85 },
-    { name: "HIIT Cardio Blast", duration: "35 min", calories: 420, type: "Cardio", time: "Yesterday", intensity: 92 },
-    { name: "Back & Biceps", duration: "48 min", calories: 310, type: "Strength", time: "2 days ago", intensity: 78 },
-    { name: "Yoga Recovery", duration: "40 min", calories: 150, type: "Flexibility", time: "3 days ago", intensity: 45 },
-    { name: "Leg Day Supreme", duration: "58 min", calories: 450, type: "Strength", time: "4 days ago", intensity: 90 },
-];
-
-const weeklyActivity = [
-    { day: "Mon", value: 85, label: "Push Day" },
-    { day: "Tue", value: 60, label: "Cardio" },
-    { day: "Wed", value: 0, label: "Rest Day" },
-    { day: "Thu", value: 90, label: "Pull Day" },
-    { day: "Fri", value: 70, label: "HIIT" },
-    { day: "Sat", value: 95, label: "Leg Day" },
-    { day: "Sun", value: 40, label: "Yoga" },
-];
-
-const goals = [
-    { label: "Weekly Workouts", current: 5, target: 6, color: "bg-blue-500" },
-    { label: "Calories Goal", current: 2847, target: 3500, color: "bg-orange-500" },
-    { label: "Active Minutes", current: 842, target: 1000, color: "bg-emerald-500" },
-];
-
-const achievements = [
-    { title: "Iron Will", description: "Complete 10 workouts in a row", icon: Trophy, earned: true },
-    { title: "Flame Keeper", description: "Burn 2,500+ calories this week", icon: Flame, earned: true },
-    { title: "Marathon Man", description: "Log 1,000 active minutes", icon: Target, earned: false },
-];
-
-/* ------------------------------------------------------------------ */
-/*  Components                                                         */
-/* ------------------------------------------------------------------ */
-
-function ActivityBar({ day, value, index }: { day: string; value: number; label: string; index: number }) {
-    return (
-        <motion.div
-            className="flex flex-col items-center gap-2"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 + index * 0.05, duration: 0.4 }}
-        >
-            <div className="relative h-28 w-8 overflow-hidden rounded-full bg-muted">
-                <motion.div
-                    className={`absolute bottom-0 w-full rounded-full ${value === 0
-                        ? "bg-muted-foreground/20"
-                        : value > 80
-                            ? "bg-gradient-to-t from-emerald-500 to-teal-400"
-                            : value > 50
-                                ? "bg-gradient-to-t from-blue-500 to-indigo-400"
-                                : "bg-gradient-to-t from-amber-500 to-yellow-400"
-                        }`}
-                    initial={{ height: 0 }}
-                    animate={{ height: `${Math.max(value, 5)}%` }}
-                    transition={{ delay: 0.5 + index * 0.08, duration: 0.7, ease: "easeOut" }}
-                />
-            </div>
-            <span className="text-xs font-medium text-muted-foreground">{day}</span>
-        </motion.div>
-    );
-}
+import {
+    stats,
+    recentWorkouts,
+    weeklyActivity,
+    goals,
+    achievements,
+} from "./_lib/mock-data";
+import { ActivityBar } from "./_components/activity-bar";
 
 /* ------------------------------------------------------------------ */
 /*  Page                                                               */

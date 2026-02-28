@@ -1,17 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
-    Users,
     TrendingUp,
-    DollarSign,
-    Activity,
     UserPlus,
     ArrowUpRight,
     ArrowDownRight,
-    CheckCircle2,
-    Clock,
     AlertCircle,
     Calendar,
     Target,
@@ -24,163 +19,17 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/use-auth";
 import { containerVariants, itemVariants, scaleIn } from "@/lib/animations";
-
-/* ------------------------------------------------------------------ */
-/*  Mock data                                                          */
-/* ------------------------------------------------------------------ */
-
-const kpiStats = [
-    {
-        title: "Total Members",
-        value: 1284,
-        display: "1,284",
-        change: "+8.2%",
-        trend: "up" as const,
-        icon: Users,
-        color: "from-violet-500 to-purple-600",
-        bgColor: "bg-violet-500/10",
-        textColor: "text-violet-600 dark:text-violet-400",
-    },
-    {
-        title: "Active Today",
-        value: 93,
-        display: "93",
-        change: "+14.3%",
-        trend: "up" as const,
-        icon: Activity,
-        color: "from-emerald-500 to-teal-500",
-        bgColor: "bg-emerald-500/10",
-        textColor: "text-emerald-600 dark:text-emerald-400",
-    },
-    {
-        title: "Monthly Revenue",
-        value: 48250,
-        display: "$48,250",
-        change: "+5.1%",
-        trend: "up" as const,
-        icon: DollarSign,
-        color: "from-blue-500 to-cyan-500",
-        bgColor: "bg-blue-500/10",
-        textColor: "text-blue-600 dark:text-blue-400",
-    },
-    {
-        title: "New Sign-ups",
-        value: 37,
-        display: "37",
-        change: "-2.4%",
-        trend: "down" as const,
-        icon: UserPlus,
-        color: "from-rose-500 to-pink-500",
-        bgColor: "bg-rose-500/10",
-        textColor: "text-rose-600 dark:text-rose-400",
-    },
-];
-
-const memberGrowth = [
-    { month: "Aug", members: 980 },
-    { month: "Sep", members: 1050 },
-    { month: "Oct", members: 1090 },
-    { month: "Nov", members: 1130 },
-    { month: "Dec", members: 1200 },
-    { month: "Jan", members: 1247 },
-    { month: "Feb", members: 1284 },
-];
-
-const recentMembers = [
-    { name: "Alex Morgan", email: "alex.m@email.com", plan: "Premium", joined: "2h ago", status: "active" },
-    { name: "Sam Rivera", email: "sam.r@email.com", plan: "Basic", joined: "5h ago", status: "active" },
-    { name: "Jordan Lee", email: "jordan.l@email.com", plan: "Premium", joined: "1d ago", status: "active" },
-    { name: "Casey Kim", email: "casey.k@email.com", plan: "Student", joined: "1d ago", status: "pending" },
-    { name: "Riley Chen", email: "riley.c@email.com", plan: "Basic", joined: "2d ago", status: "active" },
-];
-
-const todayClasses = [
-    { name: "Morning HIIT", trainer: "Mike T.", time: "07:00", capacity: 20, enrolled: 18, status: "ongoing" },
-    { name: "Yoga Flow", trainer: "Sarah K.", time: "09:30", capacity: 15, enrolled: 12, status: "upcoming" },
-    { name: "Strength Training", trainer: "Jake R.", time: "12:00", capacity: 25, enrolled: 25, status: "full" },
-    { name: "Spin Class", trainer: "Emma B.", time: "17:00", capacity: 20, enrolled: 14, status: "upcoming" },
-    { name: "Pilates Core", trainer: "Lena W.", time: "19:00", capacity: 12, enrolled: 9, status: "upcoming" },
-];
-
-const membershipBreakdown = [
-    { plan: "Premium", count: 521, color: "bg-violet-500", pct: 40.6 },
-    { plan: "Basic", count: 483, color: "bg-blue-500", pct: 37.6 },
-    { plan: "Student", count: 196, color: "bg-emerald-500", pct: 15.3 },
-    { plan: "Day Pass", count: 84, color: "bg-amber-500", pct: 6.5 },
-];
-
-const expiringMemberships = [
-    { name: "Pat Williams", plan: "Premium", daysLeft: 3 },
-    { name: "Chris Johnson", plan: "Basic", daysLeft: 5 },
-    { name: "Dana Scott", plan: "Premium", daysLeft: 7 },
-];
-
-/* ------------------------------------------------------------------ */
-/*  Sub-components                                                     */
-/* ------------------------------------------------------------------ */
-
-function AnimatedNumber({ value, prefix = "" }: { value: number; prefix?: string }) {
-    const [count, setCount] = useState(0);
-
-    useEffect(() => {
-        const duration = 1200;
-        const steps = 60;
-        const increment = value / steps;
-        let current = 0;
-        const timer = setInterval(() => {
-            current += increment;
-            if (current >= value) {
-                setCount(value);
-                clearInterval(timer);
-            } else {
-                setCount(Math.floor(current));
-            }
-        }, duration / steps);
-        return () => clearInterval(timer);
-    }, [value]);
-
-    return (
-        <>
-            {prefix}
-            {count.toLocaleString()}
-        </>
-    );
-}
-
-function GrowthBar({ month, members, maxMembers, index }: { month: string; members: number; maxMembers: number; index: number }) {
-    const pct = (members / maxMembers) * 100;
-    return (
-        <motion.div
-            className="flex flex-col items-center gap-2"
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 + index * 0.06, duration: 0.4 }}
-        >
-            <span className="text-xs font-medium text-muted-foreground">{members.toLocaleString()}</span>
-            <div className="relative h-32 w-9 overflow-hidden rounded-full bg-muted">
-                <motion.div
-                    className="absolute bottom-0 w-full rounded-full bg-gradient-to-t from-violet-600 to-purple-400"
-                    initial={{ height: 0 }}
-                    animate={{ height: `${pct}%` }}
-                    transition={{ delay: 0.4 + index * 0.07, duration: 0.8, ease: "easeOut" }}
-                />
-            </div>
-            <span className="text-xs text-muted-foreground">{month}</span>
-        </motion.div>
-    );
-}
-
-const statusConfig = {
-    active: { label: "Active", icon: CheckCircle2, className: "text-emerald-500 bg-emerald-500/10" },
-    pending: { label: "Pending", icon: Clock, className: "text-amber-500 bg-amber-500/10" },
-    inactive: { label: "Inactive", icon: AlertCircle, className: "text-rose-500 bg-rose-500/10" },
-};
-
-const classStatusConfig = {
-    ongoing: { label: "Ongoing", className: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" },
-    upcoming: { label: "Upcoming", className: "bg-blue-500/10 text-blue-600 border-blue-500/20" },
-    full: { label: "Full", className: "bg-rose-500/10 text-rose-600 border-rose-500/20" },
-};
+import {
+    kpiStats,
+    memberGrowth,
+    recentMembers,
+    todayClasses,
+    membershipBreakdown,
+    expiringMemberships,
+    statusConfig,
+    classStatusConfig,
+} from "./_lib/mock-data";
+import { AnimatedNumber, GrowthBar } from "./_components/charts";
 
 /* ------------------------------------------------------------------ */
 /*  Page                                                               */
