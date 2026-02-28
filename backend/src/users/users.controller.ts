@@ -9,18 +9,18 @@ import { Roles } from '../auth/decorators/index.js';
 @Controller('users')
 @UseInterceptors(CacheInterceptor) // auto-cache GET responses by URL+query
 export class UsersController {
-    constructor(private readonly usersService: UsersService) { }
+  constructor(private readonly usersService: UsersService) {}
 
-    @Get()
-    @ApiBearerAuth()
-    @Roles('ADMIN')
-    @CacheTTL(5_000) // cache for 5 seconds – prevents duplicate DB hits under load
-    @ApiOperation({
-        summary: 'List users (cursor-paginated)',
-        description:
-            'Returns a cursor-paginated list of users. Designed to handle 500k+ records efficiently.',
-    })
-    findAll(@Query() query: CursorPaginationDto) {
-        return this.usersService.findAllPaginated(query);
-    }
+  @Get()
+  @ApiBearerAuth()
+  @Roles('ADMIN')
+  @CacheTTL(5_000) // cache for 5 seconds – prevents duplicate DB hits under load
+  @ApiOperation({
+    summary: 'List users (cursor-paginated)',
+    description:
+      'Returns a cursor-paginated list of users. Designed to handle 500k+ records efficiently.',
+  })
+  findAll(@Query() query: CursorPaginationDto) {
+    return this.usersService.findAllPaginated(query);
+  }
 }

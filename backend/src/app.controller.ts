@@ -5,10 +5,10 @@ import { Public } from './auth/decorators/index.js';
 @ApiTags('Health')
 @Controller()
 export class AppController {
-    @Public()
-    @Get('health')
-    @ApiOperation({ summary: 'Health check' })
-    getHealth() {
-        return { status: 'ok' };
-    }
+  @Public()
+  @Get('health')
+  @ApiOperation({ summary: 'Health check' })
+  getHealth() {
+    return { status: 'ok' };
+  }
 }
