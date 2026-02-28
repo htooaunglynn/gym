@@ -1,66 +1,85 @@
 import 'dotenv/config';
-import { PrismaClient } from '../generated/prisma/client.js';
-import { PrismaPg } from '@prisma/adapter-pg';
+import pg from 'pg';
 import { hash } from 'bcrypt';
 
-const prisma = new PrismaClient({
-    adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }),
-});
+const { Client } = pg;
 
-const TOTAL_USERS = 10_500;
-const BATCH_SIZE = 500;
+const TOTAL_MEMBERS = 500_000;
 const SALT_ROUNDS = 10;
 const DEFAULT_PASSWORD = 'Password@123';
 
 async function main() {
-    console.log(`🌱 Seeding ${TOTAL_USERS} users...`);
+    const client = new Client({ connectionString: process.env.DATABASE_URL! });
+    await client.connect();
 
+    const startTime = performance.now();
+    console.log(`🌱 Seeding ${TOTAL_MEMBERS.toLocaleString()} members + 1 admin...`);
+
+    // Hash once — bcrypt is the real bottleneck if called per-row
     const hashedPassword = await hash(DEFAULT_PASSWORD, SALT_ROUNDS);
 
-    // Seed 1 admin user first
-    await prisma.user.upsert({
-        where: { email: 'admin@gym.com' },
-        update: {},
-        create: {
-            email: 'admin@gym.com',
-            password: hashedPassword,
-            name: 'Admin',
-            role: 'ADMIN',
-        },
-    });
-    console.log('✅ Admin user seeded');
+    // --- Run everything in a single transaction ---
+    await client.query('BEGIN');
 
-    // Seed member users in batches
-    let created = 0;
-    for (let batch = 0; batch < Math.ceil(TOTAL_USERS / BATCH_SIZE); batch++) {
-        const start = batch * BATCH_SIZE;
-        const end = Math.min(start + BATCH_SIZE, TOTAL_USERS);
+    try {
+        // 1. Truncate for a clean slate (fastest way to clear)
+        await client.query('TRUNCATE TABLE "users" CASCADE');
+        console.log('🗑️  Table truncated');
 
-        const users = Array.from({ length: end - start }, (_, i) => {
-            const index = start + i + 1;
-            return {
-                email: `member${index}@gym.com`,
-                password: hashedPassword,
-                name: `Member ${index}`,
-                role: 'MEMBER' as const,
-            };
-        });
+        // 2. Temporarily drop the unique index to avoid per-row index checks
+        await client.query('DROP INDEX IF EXISTS "users_email_key"');
+        console.log('📉 Dropped email unique index');
 
-        await prisma.user.createMany({
-            data: users,
-            skipDuplicates: true,
-        });
+        // 3. Seed admin user
+        await client.query(
+            `INSERT INTO "users" ("id", "email", "password", "name", "role", "created_at", "updated_at")
+             VALUES (gen_random_uuid(), 'admin@gym.com', $1, 'Admin', 'ADMIN'::"Role", now(), now())`,
+            [hashedPassword],
+        );
+        console.log('✅ Admin user seeded');
 
-        created += users.length;
-        console.log(`  📦 Batch ${batch + 1}: seeded ${created}/${TOTAL_USERS} users`);
+        // 4. Bulk-insert members using generate_series() — runs entirely in PostgreSQL
+        //    Zero JS→DB data transfer (only the hashed password string is sent once).
+        await client.query(
+            `INSERT INTO "users" ("id", "email", "password", "name", "role", "created_at", "updated_at")
+             SELECT
+                 gen_random_uuid(),
+                 'member' || g || '@gym.com',
+                 $1,
+                 'Member ' || g,
+                 'MEMBER'::"Role",
+                 now(),
+                 now()
+             FROM generate_series(1, $2::int) AS g`,
+            [hashedPassword, TOTAL_MEMBERS],
+        );
+        console.log(`✅ ${TOTAL_MEMBERS.toLocaleString()} members inserted via generate_series`);
+
+        // 5. Recreate the unique index (building once on the full dataset is faster
+        //    than maintaining it during inserts)
+        await client.query(
+            'CREATE UNIQUE INDEX "users_email_key" ON "users" ("email")',
+        );
+        console.log('📈 Recreated email unique index');
+
+        // 6. Run ANALYZE so the query planner has up-to-date statistics
+        await client.query('ANALYZE "users"');
+
+        await client.query('COMMIT');
+    } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+    } finally {
+        await client.end();
     }
 
-    console.log(`🎉 Seeding complete — ${TOTAL_USERS} member users + 1 admin`);
+    const elapsed = ((performance.now() - startTime) / 1000).toFixed(2);
+    console.log(
+        `🎉 Seeding complete — ${(TOTAL_MEMBERS + 1).toLocaleString()} users in ${elapsed}s`,
+    );
 }
 
-main()
-    .catch((e) => {
-        console.error('❌ Seeding failed:', e);
-        process.exit(1);
-    })
-    .finally(() => prisma.$disconnect());
+main().catch((e) => {
+    console.error('❌ Seeding failed:', e);
+    process.exit(1);
+});
