@@ -3,6 +3,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service.js';
 import { SignInDto, SignUpDto } from './dto/index.js';
 import { CurrentUser, Public } from './decorators/index.js';
+import type { AuthenticatedUser } from './interfaces/index.js';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -27,7 +28,7 @@ export class AuthController {
     @Get('me')
     @ApiBearerAuth()
     @ApiOperation({ summary: 'Get the current authenticated user' })
-    getMe(@CurrentUser() user: { id: string; email: string; role: string }) {
+    getMe(@CurrentUser() user: AuthenticatedUser) {
         return user;
     }
 }

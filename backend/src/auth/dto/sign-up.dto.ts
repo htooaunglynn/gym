@@ -4,12 +4,12 @@ import { IsEmail, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-vali
 export class SignUpDto {
     @ApiProperty({ example: 'user@example.com' })
     @IsEmail()
-    email: string;
+    email!: string;
 
     @ApiProperty({ example: 'strongP@ss1' })
     @IsString()
     @MinLength(8)
-    password: string;
+    password!: string;
 
     @ApiProperty({ example: 'John Doe', required: false })
     @IsOptional()

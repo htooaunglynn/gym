@@ -1,14 +1,14 @@
 import { Module } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { AppController } from './app.controller.js';
-import { AppService } from './app.service.js';
 import { LoggerModule } from './logger/logger.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { AuthModule } from './auth/auth.module.js';
-import { JwtAuthGuard } from './auth/guards/index.js';
-import { RolesGuard } from './auth/guards/index.js';
+import { JwtAuthGuard, RolesGuard } from './auth/guards/index.js';
 import { ApiKeyGuard } from './common/guards/index.js';
+import { GlobalExceptionFilter } from './common/filters/index.js';
+import { ResponseTransformInterceptor } from './common/interceptors/index.js';
 
 @Module({
     imports: [
@@ -22,7 +22,9 @@ import { ApiKeyGuard } from './common/guards/index.js';
     ],
     controllers: [AppController],
     providers: [
-        AppService,
+        // Global filter & interceptor (registered via DI for full injection support)
+        { provide: APP_FILTER, useClass: GlobalExceptionFilter },
+        { provide: APP_INTERCEPTOR, useClass: ResponseTransformInterceptor },
         // Guard order: Throttle → API Key → JWT → Roles
         { provide: APP_GUARD, useClass: ThrottlerGuard },
         { provide: APP_GUARD, useClass: ApiKeyGuard },

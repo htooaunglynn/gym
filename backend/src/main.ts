@@ -1,13 +1,11 @@
 import 'dotenv/config';
-import { NestFactory, HttpAdapterHost } from '@nestjs/core';
+import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { Logger } from 'nestjs-pino';
 import helmet from 'helmet';
 import compression from 'compression';
 import { AppModule } from './app.module.js';
-import { GlobalExceptionFilter } from './common/filters/index.js';
-import { ResponseTransformInterceptor } from './common/interceptors/index.js';
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule, { bufferLogs: true });
@@ -29,7 +27,8 @@ async function bootstrap() {
     app.setGlobalPrefix('api');
     app.enableVersioning({ type: VersioningType.URI, defaultVersion: '1' });
 
-    // ── Global pipes, filters & interceptors ─────────────────────────
+    // ── Global pipes ─────────────────────────────────────────────────
+    // (Filters & interceptors are registered via DI in AppModule)
     app.useGlobalPipes(
         new ValidationPipe({
             whitelist: true,
@@ -38,10 +37,6 @@ async function bootstrap() {
             transformOptions: { enableImplicitConversion: true },
         }),
     );
-
-    const httpAdapterHost = app.get(HttpAdapterHost);
-    app.useGlobalFilters(new GlobalExceptionFilter(httpAdapterHost));
-    app.useGlobalInterceptors(new ResponseTransformInterceptor());
 
     // ── Swagger (non-production only) ────────────────────────────────
     if (process.env.NODE_ENV !== 'production') {
