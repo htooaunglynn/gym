@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { TOKEN_KEY } from "@/lib/constants";
 import { decodeJwt } from "@/lib/jwt";
@@ -18,9 +18,17 @@ interface AuthState {
     isLoading: boolean;
 }
 
-function getInitialAuthState(): AuthState {
-    if (typeof window === "undefined") return { user: null, token: null, isLoading: true };
+const INITIAL_AUTH_STATE: AuthState = {
+    user: null,
+    token: null,
+    isLoading: true,
+};
 
+function subscribeHydration() {
+    return () => {};
+}
+
+function getAuthStateFromStorage(): AuthState {
     const accessToken = localStorage.getItem(TOKEN_KEY);
     if (!accessToken) return { user: null, token: null, isLoading: false };
 
@@ -39,7 +47,8 @@ function getInitialAuthState(): AuthState {
 
 export function useAuth({ redirectTo = "/sign-in" }: { redirectTo?: string } = {}) {
     const router = useRouter();
-    const [authState] = useState<AuthState>(getInitialAuthState);
+    const hydrated = useSyncExternalStore(subscribeHydration, () => true, () => false);
+    const authState = hydrated ? getAuthStateFromStorage() : INITIAL_AUTH_STATE;
 
     useEffect(() => {
         if (!authState.isLoading && !authState.user) {
