@@ -4,8 +4,11 @@ import {
   type DbUser,
   type Role,
   type UserCreateInput,
-} from '../prisma/prisma.service.js';
-import { CursorPaginationDto, PaginatedResult } from '../common/dto/index.js';
+} from '../../prisma/prisma.service.js';
+import {
+  CursorPaginationDto,
+  PaginatedResult,
+} from '../../shared/dto/index.js';
 
 /** Fields safe to return to clients (no password). */
 const USER_PUBLIC_SELECT = {

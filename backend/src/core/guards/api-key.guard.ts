@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { IS_PUBLIC_KEY } from '../../auth/decorators/index.js';
+import { IS_PUBLIC_KEY } from '../../modules/auth/decorators/index.js';
 
 /**
  * Optional API-key guard. When the environment variable `API_KEY` is set,

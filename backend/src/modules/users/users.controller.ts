@@ -2,7 +2,7 @@ import { Controller, Get, Query, UseInterceptors } from '@nestjs/common';
 import { CacheInterceptor, CacheTTL } from '@nestjs/cache-manager';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UsersService } from './users.service.js';
-import { CursorPaginationDto } from '../common/dto/index.js';
+import { CursorPaginationDto } from '../../shared/dto/index.js';
 import { Roles } from '../auth/decorators/index.js';
 
 @ApiTags('Users')

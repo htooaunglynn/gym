@@ -3,14 +3,14 @@ import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { CacheModule } from '@nestjs/cache-manager';
 import { AppController } from './app.controller.js';
-import { LoggerModule } from './logger/logger.module.js';
+import { LoggerModule } from './core/logger/logger.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
-import { AuthModule } from './auth/auth.module.js';
-import { UsersModule } from './users/users.module.js';
-import { JwtAuthGuard, RolesGuard } from './auth/guards/index.js';
-import { ApiKeyGuard } from './common/guards/index.js';
-import { GlobalExceptionFilter } from './common/filters/index.js';
-import { ResponseTransformInterceptor } from './common/interceptors/index.js';
+import { AuthModule } from './modules/auth/auth.module.js';
+import { UsersModule } from './modules/users/users.module.js';
+import { JwtAuthGuard, RolesGuard } from './modules/auth/guards/index.js';
+import { ApiKeyGuard } from './core/guards/index.js';
+import { GlobalExceptionFilter } from './core/filters/index.js';
+import { ResponseTransformInterceptor } from './core/interceptors/index.js';
 
 @Module({
   imports: [
