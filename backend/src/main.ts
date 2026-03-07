@@ -11,12 +11,19 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
   app.useLogger(app.get(Logger));
 
+  const corsOrigins = (
+    process.env.CORS_ORIGINS ?? 'http://localhost:5173,http://localhost:3001'
+  )
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
   // ── Security ──────────────────────────────────────────────────────
   app.use(helmet());
   app.use(compression());
 
   app.enableCors({
-    origin: process.env.CORS_ORIGIN ?? 'http://localhost:3001',
+    origin: corsOrigins,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key'],
@@ -54,7 +61,7 @@ async function bootstrap() {
   const port = process.env.PORT ?? 3000;
   await app.listen(port, () => {
     const logger = app.get(Logger);
-    logger.log(`Server is running on http://localhost:${port}`);
+    logger.log(`Server is running on http://localhost:${port}/api/v1`);
     logger.log(`Swagger docs available at http://localhost:${port}/docs`);
   });
 }

@@ -1,63 +1,130 @@
 import {
   ConflictException,
   Injectable,
+  InternalServerErrorException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import bcrypt from 'bcrypt';
+import type { User as ClerkBackendUser } from '@clerk/backend';
+import type { AuthenticatedUser } from './interfaces/index.js';
 import { UsersService } from '../users/users.service.js';
-import { SignInDto } from './dto/sign-in.dto.js';
-import { SignUpDto } from './dto/sign-up.dto.js';
-import type { AuthenticatedUser, JwtPayload } from './interfaces/index.js';
+import { ClerkAuthService } from './clerk-auth.service.js';
 
 @Injectable()
 export class AuthService {
-  private static readonly SALT_ROUNDS = 10;
-
   constructor(
     private readonly usersService: UsersService,
-    private readonly jwtService: JwtService,
+    private readonly clerkAuthService: ClerkAuthService,
   ) {}
 
-  async signUp(dto: SignUpDto) {
-    const existing = await this.usersService.findByEmail(dto.email);
-    if (existing) {
-      throw new ConflictException('Email already in use');
+  async authenticateWithToken(token: string): Promise<AuthenticatedUser> {
+    const claims = await this.clerkAuthService.verifySessionToken(token);
+
+    if (typeof claims.sub !== 'string' || claims.sub.length === 0) {
+      throw new UnauthorizedException('Invalid Clerk token payload');
     }
 
-    const hashedPassword = await bcrypt.hash(
-      dto.password,
-      AuthService.SALT_ROUNDS,
-    );
-    const user = await this.usersService.create({
-      ...dto,
-      password: hashedPassword,
+    const user = await this.usersService.findByClerkId(claims.sub);
+    if (user) {
+      return this.toAuthenticatedUser(user);
+    }
+
+    return this.syncUserFromClerk(claims.sub);
+  }
+
+  async syncUserFromClerk(clerkId: string): Promise<AuthenticatedUser> {
+    const clerkUser = await this.clerkAuthService.getUser(clerkId);
+    const email = this.extractPrimaryEmail(clerkUser).toLowerCase();
+    const name = this.extractDisplayName(clerkUser);
+
+    const userByClerkId = await this.usersService.findByClerkId(clerkId);
+    if (userByClerkId) {
+      const emailChanged = userByClerkId.email !== email;
+      const nameChanged = userByClerkId.name !== name;
+
+      if (emailChanged || nameChanged) {
+        const updated = await this.usersService.updateById(userByClerkId.id, {
+          email,
+          name,
+        });
+
+        return this.toAuthenticatedUser(updated);
+      }
+
+      return this.toAuthenticatedUser(userByClerkId);
+    }
+
+    const userByEmail = await this.usersService.findByEmail(email);
+    if (userByEmail) {
+      if (userByEmail.clerkId && userByEmail.clerkId !== clerkId) {
+        throw new ConflictException(
+          'Email is already linked to another Clerk account',
+        );
+      }
+
+      const linkedUser = await this.usersService.updateById(userByEmail.id, {
+        clerkId,
+        name,
+      });
+
+      return this.toAuthenticatedUser(linkedUser);
+    }
+
+    const createdUser = await this.usersService.create({
+      clerkId,
+      email,
+      name,
+      password: null,
     });
 
-    return { accessToken: this.generateToken(user) };
+    return this.toAuthenticatedUser(createdUser);
   }
 
-  async signIn(dto: SignInDto) {
-    const user = await this.usersService.findByEmail(dto.email);
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
+  private extractPrimaryEmail(user: ClerkBackendUser): string {
+    const primaryEmail = user.primaryEmailAddress?.emailAddress;
+    if (primaryEmail) {
+      return primaryEmail;
     }
 
-    const passwordValid = await bcrypt.compare(dto.password, user.password);
-    if (!passwordValid) {
-      throw new UnauthorizedException('Invalid credentials');
+    const fallbackEmail = user.emailAddresses[0]?.emailAddress;
+    if (fallbackEmail) {
+      return fallbackEmail;
     }
 
-    return { accessToken: this.generateToken(user) };
+    throw new InternalServerErrorException(
+      'Clerk user has no email address configured',
+    );
   }
 
-  private generateToken(user: AuthenticatedUser): string {
-    const payload: JwtPayload = {
-      sub: user.id,
+  private extractDisplayName(user: ClerkBackendUser): string | null {
+    if (user.fullName && user.fullName.trim().length > 0) {
+      return user.fullName;
+    }
+
+    const fallbackName = [user.firstName, user.lastName]
+      .filter((part): part is string => Boolean(part && part.trim().length > 0))
+      .join(' ')
+      .trim();
+
+    return fallbackName.length > 0 ? fallbackName : null;
+  }
+
+  private toAuthenticatedUser(user: {
+    id: string;
+    clerkId: string | null;
+    email: string;
+    name: string | null;
+    role: AuthenticatedUser['role'];
+  }): AuthenticatedUser {
+    if (!user.clerkId) {
+      throw new UnauthorizedException('User is not linked with Clerk');
+    }
+
+    return {
+      id: user.id,
+      clerkId: user.clerkId,
       email: user.email,
-      name: user.name ?? null,
+      name: user.name,
       role: user.role,
     };
-    return this.jwtService.sign(payload);
   }
 }

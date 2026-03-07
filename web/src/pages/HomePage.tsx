@@ -12,8 +12,8 @@ export default function HomePage() {
     return null
   }
 
-  if (!isSignedIn) {
-    return <Navigate replace to="/sign-in" />
+  if (isSignedIn) {
+    return <Navigate replace to="/admin" />
   }
 
   return (

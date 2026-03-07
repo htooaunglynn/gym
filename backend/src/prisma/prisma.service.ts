@@ -5,16 +5,26 @@ import { PrismaPg } from '@prisma/adapter-pg';
 export type Role = 'ADMIN' | 'MEMBER';
 
 export type UserCreateInput = {
+  clerkId?: string | null;
   email: string;
-  password: string;
+  password?: string | null;
+  name?: string | null;
+  role?: Role;
+};
+
+export type UserUpdateInput = {
+  clerkId?: string | null;
+  email?: string;
+  password?: string | null;
   name?: string | null;
   role?: Role;
 };
 
 export type DbUser = {
   id: string;
+  clerkId: string | null;
   email: string;
-  password: string;
+  password: string | null;
   name: string | null;
   role: Role;
   createdAt: Date;
@@ -36,15 +46,28 @@ type UserFindManyArgs = {
   };
 };
 
+type UserListItem = {
+  id: string;
+  email: string;
+  name: string | null;
+  role: Role;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 type PrismaClientLike = {
   $connect: () => Promise<void>;
   $disconnect: () => Promise<void>;
   user: {
     create: (args: { data: UserCreateInput }) => Promise<DbUser>;
+    update: (args: {
+      where: { id: string };
+      data: UserUpdateInput;
+    }) => Promise<DbUser>;
     findUnique: (args: {
-      where: { email: string } | { id: string };
+      where: { email: string } | { id: string } | { clerkId: string };
     }) => Promise<DbUser | null>;
-    findMany: (args: UserFindManyArgs) => Promise<Omit<DbUser, 'password'>[]>;
+    findMany: (args: UserFindManyArgs) => Promise<UserListItem[]>;
     count: () => Promise<number>;
   };
 };

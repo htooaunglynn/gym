@@ -1,15 +1,7 @@
-import {
-  Body,
-  Controller,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Post,
-} from '@nestjs/common';
+import { Controller, Get, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service.js';
-import { SignInDto, SignUpDto } from './dto/index.js';
-import { CurrentUser, Public } from './decorators/index.js';
+import { CurrentUser } from './decorators/index.js';
 import type { AuthenticatedUser } from './interfaces/index.js';
 
 @ApiTags('Auth')
@@ -17,19 +9,11 @@ import type { AuthenticatedUser } from './interfaces/index.js';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Public()
-  @Post('sign-up')
-  @ApiOperation({ summary: 'Register a new user' })
-  signUp(@Body() dto: SignUpDto) {
-    return this.authService.signUp(dto);
-  }
-
-  @Public()
-  @Post('sign-in')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Sign in with email and password' })
-  signIn(@Body() dto: SignInDto) {
-    return this.authService.signIn(dto);
+  @Post('sync')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Sync the current Clerk user to local database' })
+  syncCurrentUser(@CurrentUser() user: AuthenticatedUser) {
+    return this.authService.syncUserFromClerk(user.clerkId);
   }
 
   @Get('me')

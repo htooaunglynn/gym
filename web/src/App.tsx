@@ -1,7 +1,13 @@
-import { AppRoutes } from '@/routes/AppRoutes'
+import { AuthSessionSync } from '@/features/auth/components/AuthSessionSync';
+import { AppRoutes } from '@/routes/AppRoutes';
 
 function App() {
-  return <AppRoutes />
+  return (
+    <>
+      <AuthSessionSync />
+      <AppRoutes />
+    </>
+  );
 }
 
-export default App
+export default App;

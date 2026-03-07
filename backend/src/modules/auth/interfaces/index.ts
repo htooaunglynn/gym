@@ -1,5 +1,1 @@
-export type {
-  JwtPayload,
-  AuthenticatedUser,
-  Role,
-} from './jwt-payload.interface.js';
+export type { AuthenticatedUser, Role } from './jwt-payload.interface.js';

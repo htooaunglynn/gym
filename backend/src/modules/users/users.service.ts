@@ -4,6 +4,7 @@ import {
   type DbUser,
   type Role,
   type UserCreateInput,
+  type UserUpdateInput,
 } from '../../prisma/prisma.service.js';
 import {
   CursorPaginationDto,
@@ -37,8 +38,16 @@ export class UsersService {
     return this.prisma.user.create({ data });
   }
 
+  updateById(id: string, data: UserUpdateInput): Promise<DbUser> {
+    return this.prisma.user.update({ where: { id }, data });
+  }
+
   findByEmail(email: string): Promise<DbUser | null> {
     return this.prisma.user.findUnique({ where: { email } });
+  }
+
+  findByClerkId(clerkId: string): Promise<DbUser | null> {
+    return this.prisma.user.findUnique({ where: { clerkId } });
   }
 
   findById(id: string): Promise<DbUser | null> {

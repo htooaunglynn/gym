@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -6,7 +6,7 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  font-family: 'Manrope', 'Plus Jakarta Sans', 'Nunito Sans', sans-serif;
+  font-family: "Manrope", "Plus Jakarta Sans", "Nunito Sans", sans-serif;
   --radius: 0.875rem;
   --background: oklch(0.985 0.006 75);
   --foreground: oklch(0.22 0.02 255);
@@ -38,6 +38,40 @@
   --sidebar-accent: oklch(0.95 0.01 82);
   --sidebar-accent-foreground: oklch(0.22 0.02 255);
   --sidebar-border: oklch(0.9 0.01 85);
+  --sidebar-ring: oklch(0.76 0.12 75);
+}
+
+.dark {
+  --background: oklch(0.145 0.014 260);
+  --foreground: oklch(0.94 0.006 75);
+  --card: oklch(0.19 0.014 260);
+  --card-foreground: oklch(0.94 0.006 75);
+  --popover: oklch(0.19 0.014 260);
+  --popover-foreground: oklch(0.94 0.006 75);
+  --primary: oklch(0.76 0.12 75);
+  --primary-foreground: oklch(0.16 0.014 260);
+  --secondary: oklch(0.24 0.014 260);
+  --secondary-foreground: oklch(0.88 0.01 75);
+  --muted: oklch(0.22 0.014 260);
+  --muted-foreground: oklch(0.6 0.02 255);
+  --accent: oklch(0.3 0.04 75);
+  --accent-foreground: oklch(0.92 0.09 75);
+  --destructive: oklch(0.55 0.22 30);
+  --border: oklch(0.28 0.014 260);
+  --input: oklch(0.28 0.014 260);
+  --ring: oklch(0.76 0.12 75);
+  --chart-1: oklch(0.72 0.15 72);
+  --chart-2: oklch(0.67 0.16 223);
+  --chart-3: oklch(0.63 0.16 160);
+  --chart-4: oklch(0.75 0.14 55);
+  --chart-5: oklch(0.58 0.11 250);
+  --sidebar: oklch(0.17 0.014 260);
+  --sidebar-foreground: oklch(0.88 0.01 75);
+  --sidebar-primary: oklch(0.76 0.12 75);
+  --sidebar-primary-foreground: oklch(0.16 0.014 260);
+  --sidebar-accent: oklch(0.24 0.014 260);
+  --sidebar-accent-foreground: oklch(0.92 0.01 75);
+  --sidebar-border: oklch(0.28 0.014 260);
   --sidebar-ring: oklch(0.76 0.12 75);
 }
 
@@ -109,9 +143,9 @@
 
   a,
   button,
-  [role='button'],
-  input[type='button'],
-  input[type='submit'] {
+  [role="button"],
+  input[type="button"],
+  input[type="submit"] {
     cursor: pointer;
     transition:
       transform 180ms ease,
@@ -124,24 +158,24 @@
 
   a:hover,
   button:hover:not(:disabled),
-  [role='button']:hover,
-  input[type='button']:hover:not(:disabled),
-  input[type='submit']:hover:not(:disabled) {
+  [role="button"]:hover,
+  input[type="button"]:hover:not(:disabled),
+  input[type="submit"]:hover:not(:disabled) {
     transform: translateY(-1px);
   }
 
   a:active,
   button:active:not(:disabled),
-  [role='button']:active,
-  input[type='button']:active:not(:disabled),
-  input[type='submit']:active:not(:disabled) {
+  [role="button"]:active,
+  input[type="button"]:active:not(:disabled),
+  input[type="submit"]:active:not(:disabled) {
     transform: translateY(0);
   }
 
   button:disabled,
-  input[type='button']:disabled,
-  input[type='submit']:disabled,
-  [aria-disabled='true'] {
+  input[type="button"]:disabled,
+  input[type="submit"]:disabled,
+  [aria-disabled="true"] {
     cursor: not-allowed;
   }
 }

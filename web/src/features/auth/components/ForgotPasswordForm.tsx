@@ -1,5 +1,5 @@
 import { type FormEvent, useState } from 'react'
-import { useSignIn } from '@clerk/react/legacy'
+import { useSignIn } from '@clerk/react-router'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Loader2, RotateCw } from 'lucide-react'
 import { Link, useNavigate } from 'react-router'
@@ -10,6 +10,7 @@ import { getClerkErrorMessage } from '@/features/auth/utils/clerk-errors'
 import { FeedbackMessage } from '@/components/shared/FeedbackMessage'
 import { FormInput } from '@/components/shared/forms/FormInput'
 import { LoadingState } from '@/components/shared/LoadingState'
+import { ClerkCaptcha } from './ClerkCaptcha'
 
 const stepTransition = {
   initial: { opacity: 0, y: 12 },
@@ -20,7 +21,7 @@ const stepTransition = {
 
 export function ForgotPasswordForm() {
   const navigate = useNavigate()
-  const { isLoaded, signIn, setActive } = useSignIn()
+  const { signIn } = useSignIn()
 
   const [step, setStep] = useState<'request' | 'reset'>('request')
   const [email, setEmail] = useState('')
@@ -35,7 +36,7 @@ export function ForgotPasswordForm() {
   const requestResetCode = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
-    if (!isLoaded) {
+    if (!signIn) {
       return
     }
 
@@ -43,18 +44,20 @@ export function ForgotPasswordForm() {
     setErrorMessage('')
 
     try {
-      const attempt = await signIn.create({
-        strategy: 'reset_password_email_code',
-        identifier: email,
-      })
-
-      if (attempt.status === 'needs_first_factor' || attempt.status === 'needs_new_password') {
-        setStep('reset')
-        setSuccessMessage('Check your email for the verification code.')
+      const { error: createError } = await signIn.create({ identifier: email })
+      if (createError) {
+        setErrorMessage(getClerkErrorMessage(createError, 'Could not request a password reset code.'))
         return
       }
 
-      setErrorMessage('Unable to start reset flow. Please try again.')
+      const { error: sendError } = await signIn.resetPasswordEmailCode.sendCode()
+      if (sendError) {
+        setErrorMessage(getClerkErrorMessage(sendError, 'Could not request a password reset code.'))
+        return
+      }
+
+      setStep('reset')
+      setSuccessMessage('Check your email for the verification code.')
     } catch (error: unknown) {
       setErrorMessage(getClerkErrorMessage(error, 'Could not request a password reset code.'))
     } finally {
@@ -65,7 +68,7 @@ export function ForgotPasswordForm() {
   const submitNewPassword = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
-    if (!isLoaded) {
+    if (!signIn) {
       return
     }
 
@@ -78,14 +81,24 @@ export function ForgotPasswordForm() {
     setErrorMessage('')
 
     try {
-      const attempt = await signIn.attemptFirstFactor({
-        strategy: 'reset_password_email_code',
-        code,
-        password: newPassword,
-      })
+      const { error: verifyError } = await signIn.resetPasswordEmailCode.verifyCode({ code })
+      if (verifyError) {
+        setErrorMessage(getClerkErrorMessage(verifyError, 'Invalid reset code.'))
+        return
+      }
 
-      if (attempt.status === 'complete' && attempt.createdSessionId) {
-        await setActive({ session: attempt.createdSessionId })
+      const { error: submitError } = await signIn.resetPasswordEmailCode.submitPassword({ password: newPassword })
+      if (submitError) {
+        setErrorMessage(getClerkErrorMessage(submitError, 'Could not reset password.'))
+        return
+      }
+
+      if (signIn.status === 'complete') {
+        const { error: finalizeError } = await signIn.finalize()
+        if (finalizeError) {
+          setErrorMessage(getClerkErrorMessage(finalizeError, 'Password reset was successful, but session could not be activated.'))
+          return
+        }
         navigate('/', { replace: true })
         return
       }
@@ -99,7 +112,7 @@ export function ForgotPasswordForm() {
   }
 
   const resendCode = async () => {
-    if (!isLoaded || isResending) {
+    if (!signIn || isResending) {
       return
     }
 
@@ -107,10 +120,11 @@ export function ForgotPasswordForm() {
     setErrorMessage('')
 
     try {
-      await signIn.create({
-        strategy: 'reset_password_email_code',
-        identifier: email,
-      })
+      const { error } = await signIn.resetPasswordEmailCode.sendCode()
+      if (error) {
+        setErrorMessage(getClerkErrorMessage(error, 'Unable to resend code right now.'))
+        return
+      }
       setSuccessMessage('A new code has been sent to your email.')
     } catch (error: unknown) {
       setErrorMessage(getClerkErrorMessage(error, 'Unable to resend code right now.'))
@@ -119,7 +133,7 @@ export function ForgotPasswordForm() {
     }
   }
 
-  if (!isLoaded) {
+  if (!signIn) {
     return (
       <LoadingState
         subtitle="Loading password recovery controls..."
@@ -144,6 +158,7 @@ export function ForgotPasswordForm() {
             />
 
             <FeedbackMessage text={errorMessage} type="error" />
+            <ClerkCaptcha />
 
             <Button
               className="h-11 w-full rounded-xl bg-slate-900 text-base font-medium hover:bg-slate-800"
@@ -190,6 +205,7 @@ export function ForgotPasswordForm() {
 
             <FeedbackMessage text={successMessage} type="success" />
             <FeedbackMessage text={errorMessage} type="error" />
+            <ClerkCaptcha />
 
             <Button
               className="h-11 w-full rounded-xl bg-slate-900 text-base font-medium hover:bg-slate-800"

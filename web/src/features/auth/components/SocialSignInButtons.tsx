@@ -1,17 +1,12 @@
 import { useState } from 'react'
 import { Apple, Facebook, Loader2 } from 'lucide-react'
+import { useSignIn, useSignUp } from '@clerk/react'
 
 import { Button } from '@/components/ui/button'
 
 type SocialSignInButtonsProps = {
   disabled: boolean
-  auth: {
-    authenticateWithRedirect: (params: {
-      strategy: 'oauth_apple' | 'oauth_google' | 'oauth_facebook'
-      redirectUrl: string
-      redirectUrlComplete: string
-    }) => Promise<void>
-  }
+  auth: ReturnType<typeof useSignIn>['signIn'] | ReturnType<typeof useSignUp>['signUp']
   onError: (message: string) => void
 }
 
@@ -41,11 +36,16 @@ export function SocialSignInButtons({ auth, disabled, onError }: SocialSignInBut
     onError('')
 
     try {
-      await auth.authenticateWithRedirect({
+      const { error } = await auth.sso({
         strategy,
-        redirectUrl: new URL('/sso-callback', window.location.origin).toString(),
-        redirectUrlComplete: new URL('/', window.location.origin).toString(),
+        redirectCallbackUrl: new URL('/sso-callback', window.location.origin).toString(),
+        redirectUrl: new URL('/', window.location.origin).toString(),
       })
+
+      if (error) {
+        onError('Social authentication failed. Please try another provider.')
+        setPendingProvider(null)
+      }
     } catch {
       onError('Social authentication failed. Please try another provider.')
       setPendingProvider(null)
