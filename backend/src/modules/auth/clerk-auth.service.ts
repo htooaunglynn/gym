@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { createClerkClient, verifyToken } from '@clerk/backend';
 
 @Injectable()
@@ -7,7 +11,7 @@ export class ClerkAuthService {
   private readonly jwtKey?: string;
   private readonly authorizedParties?: string[];
 
-  private readonly clerkClient;
+  private readonly clerkClient: ReturnType<typeof createClerkClient>;
 
   constructor() {
     const secretKey = process.env.CLERK_SECRET_KEY;
@@ -43,6 +47,22 @@ export class ClerkAuthService {
       return await this.clerkClient.users.getUser(userId);
     } catch {
       throw new UnauthorizedException('Unable to fetch Clerk user');
+    }
+  }
+
+  async updateUserMetadata(
+    userId: string,
+    publicMetadata: Record<string, any>,
+  ) {
+    try {
+      return await this.clerkClient.users.updateUserMetadata(userId, {
+        publicMetadata,
+      });
+    } catch (error) {
+      console.error('Failed to update Clerk user metadata:', error);
+      throw new InternalServerErrorException(
+        'Unable to update Clerk user metadata',
+      );
     }
   }
 }

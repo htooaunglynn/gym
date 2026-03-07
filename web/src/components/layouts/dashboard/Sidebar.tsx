@@ -1,4 +1,5 @@
 import { Link, useLocation } from "react-router"
+import { useUser } from "@clerk/react"
 import { motion, AnimatePresence } from "framer-motion"
 import { 
   BarChart3, 
@@ -15,7 +16,7 @@ import { useSidebar } from "./SidebarContext"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
 
-const menuGroups = [
+const adminMenuGroups = [
   {
     label: "Overview",
     items: [
@@ -40,13 +41,44 @@ const menuGroups = [
   },
 ]
 
+const memberMenuGroups = [
+  {
+    label: "Overview",
+    items: [
+      { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+      { label: "Schedule", href: "/dashboard/schedule", icon: CalendarDays },
+    ],
+  },
+  {
+    label: "Activity",
+    items: [
+      { label: "My Workouts", href: "/dashboard/workouts", icon: Dumbbell },
+      { label: "Progress", href: "/dashboard/progress", icon: BarChart3 },
+    ],
+  },
+  {
+    label: "Account",
+    items: [
+      { label: "Profile", href: "/dashboard/profile", icon: Users },
+      { label: "Membership", href: "/dashboard/membership", icon: CreditCard },
+    ],
+  },
+]
+
 type SidebarProps = {
   isMobile?: boolean
 }
 
 export function Sidebar({ isMobile }: SidebarProps) {
   const location = useLocation()
+  const { user } = useUser()
   const { isCollapsed, toggleSidebar } = useSidebar()
+  
+  const userRole = user?.publicMetadata?.role as string | undefined
+  const isAdmin = userRole === 'ADMIN'
+  const menuGroups = isAdmin ? adminMenuGroups : memberMenuGroups
+  const brandPath = isAdmin ? '/admin' : '/dashboard'
+  const brandName = isAdmin ? 'GymAdmin' : 'GymMember'
 
   const sidebarWidth = isCollapsed && !isMobile ? "w-20" : "w-72"
 
@@ -60,7 +92,7 @@ export function Sidebar({ isMobile }: SidebarProps) {
       initial={false}
     >
       <div className="flex h-16 items-center border-b border-white/20 px-6 dark:border-white/10">
-        <Link to="/admin" className="flex items-center gap-3">
+        <Link to={brandPath} className="flex items-center gap-3">
           <div className="flex size-8 items-center justify-center rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900">
              <Dumbbell className="size-5" />
           </div>
@@ -72,7 +104,7 @@ export function Sidebar({ isMobile }: SidebarProps) {
                 exit={{ opacity: 0, x: -10 }}
                 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white"
               >
-                GymAdmin
+                {brandName}
               </motion.span>
             )}
           </AnimatePresence>

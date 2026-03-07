@@ -51,34 +51,45 @@ export function VerificationBanner() {
   }
 
   return (
-    <div className="relative z-50 overflow-hidden border-b border-amber-200/50 bg-amber-50 dark:border-amber-900/30 dark:bg-amber-950/20">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2 sm:px-6 lg:px-8">
-        <div className="flex flex-1 items-center gap-3 py-1">
-          <AlertCircle className="size-5 text-amber-600 dark:text-amber-500" />
-          <p className="text-sm font-medium text-amber-900 dark:text-amber-200">
-            Please verify your email address to secure your account.
-          </p>
+    <div className="relative z-50 overflow-hidden border-b border-indigo-200/30 bg-white/60 backdrop-blur-md dark:border-indigo-950/30 dark:bg-slate-950/60">
+      <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 via-sky-500/5 to-indigo-500/5" />
+      
+      <div className="relative mx-auto flex max-w-7xl items-center justify-between px-4 py-2 sm:px-6 lg:px-8">
+        <div className="flex flex-1 items-center gap-4 py-1">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-100 dark:bg-indigo-900/40">
+            <AlertCircle className="size-5 text-indigo-600 dark:text-indigo-400" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+              Account Security
+            </p>
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+              Please verify your email address to secure your account.
+            </p>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {!isVerifying ? (
             <Button
               onClick={handleStartVerification}
               disabled={isSending}
               size="sm"
-              className="h-8 rounded-lg bg-amber-600 px-4 text-xs font-semibold text-white hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600"
+              className="group relative h-9 overflow-hidden rounded-xl bg-slate-900 px-5 text-xs font-bold text-white transition-all hover:bg-slate-800 hover:shadow-lg hover:shadow-indigo-500/20 active:scale-95 dark:bg-indigo-600 dark:hover:bg-indigo-500"
             >
-              {isSending ? <Loader2 className="mr-2 size-3 animate-spin" /> : null}
-              Verify Now
+              <span className="relative z-10 flex items-center gap-2">
+                {isSending ? <Loader2 className="size-3.5 animate-spin" /> : null}
+                Verify Now
+              </span>
             </Button>
           ) : (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <form onSubmit={handleVerifyCode} className="flex items-center gap-2">
                 <Input
                   value={code}
                   onChange={(e) => setCode(e.target.value)}
                   placeholder="6-digit code"
-                  className="h-8 w-28 rounded-lg border-amber-200 bg-white text-xs focus-visible:ring-amber-500 dark:border-amber-900/50 dark:bg-slate-900"
+                  className="h-9 w-32 rounded-xl border-slate-200 bg-white/50 text-center text-xs font-bold tracking-[0.2em] transition-all focus-visible:border-indigo-500 focus-visible:ring-indigo-500/20 dark:border-indigo-900/50 dark:bg-slate-900/50"
                   maxLength={6}
                   required
                 />
@@ -86,17 +97,17 @@ export function VerificationBanner() {
                   type="submit"
                   disabled={isSubmitting}
                   size="sm"
-                  className="h-8 rounded-lg bg-slate-900 px-4 text-xs font-semibold text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+                  className="h-9 rounded-xl bg-indigo-600 px-5 text-xs font-bold text-white transition-all hover:bg-indigo-500 hover:shadow-lg hover:shadow-indigo-500/20 active:scale-95"
                 >
-                  {isSubmitting ? <Loader2 className="mr-2 size-3 animate-spin" /> : null}
-                  Submit
+                  {isSubmitting ? <Loader2 className="mr-2 size-3.5 animate-spin" /> : null}
+                  Confirm
                 </Button>
               </form>
               <Button
                 onClick={() => setIsVerifying(false)}
                 variant="ghost"
                 size="icon"
-                className="size-8 rounded-lg text-slate-400 hover:bg-amber-100 dark:hover:bg-amber-900/30"
+                className="size-9 rounded-xl text-slate-400 transition-colors hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-indigo-900/40 dark:hover:text-indigo-400"
               >
                 <X className="size-4" />
               </Button>
@@ -111,18 +122,22 @@ export function VerificationBanner() {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="border-t border-amber-200/30 bg-white/50 px-4 py-1.5 dark:border-amber-900/20 dark:bg-slate-900/50"
+            className="border-t border-indigo-100/50 bg-white/30 dark:border-indigo-900/20 dark:bg-slate-900/30"
           >
-            <div className="mx-auto flex max-w-7xl items-center gap-2 text-xs font-medium">
+            <div className="mx-auto flex max-w-7xl items-center gap-2.5 px-4 py-2 sm:px-6 lg:px-8 text-xs font-bold">
               {error ? (
                 <>
-                  <AlertCircle className="size-3.5 text-red-500" />
-                  <span className="text-red-700 dark:text-red-400">{error}</span>
+                  <div className="flex h-5 w-5 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/40">
+                    <AlertCircle className="size-3 text-red-600 dark:text-red-400" />
+                  </div>
+                  <span className="text-red-600 dark:text-red-400">{error}</span>
                 </>
               ) : (
                 <>
-                  <CheckCircle2 className="size-3.5 text-emerald-500" />
-                  <span className="text-emerald-700 dark:text-emerald-400">{success}</span>
+                  <div className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/40">
+                    <CheckCircle2 className="size-3 text-emerald-600 dark:text-emerald-400" />
+                  </div>
+                  <span className="text-emerald-600 dark:text-emerald-400">{success}</span>
                 </>
               )}
             </div>

@@ -47,8 +47,16 @@ export class AuthService {
           name,
         });
 
+        await this.clerkAuthService.updateUserMetadata(clerkId, {
+          role: updated.role,
+        });
+
         return this.toAuthenticatedUser(updated);
       }
+
+      await this.clerkAuthService.updateUserMetadata(clerkId, {
+        role: userByClerkId.role,
+      });
 
       return this.toAuthenticatedUser(userByClerkId);
     }
@@ -66,6 +74,10 @@ export class AuthService {
         name,
       });
 
+      await this.clerkAuthService.updateUserMetadata(clerkId, {
+        role: linkedUser.role,
+      });
+
       return this.toAuthenticatedUser(linkedUser);
     }
 
@@ -74,6 +86,10 @@ export class AuthService {
       email,
       name,
       password: null,
+    });
+
+    await this.clerkAuthService.updateUserMetadata(clerkId, {
+      role: createdUser.role,
     });
 
     return this.toAuthenticatedUser(createdUser);

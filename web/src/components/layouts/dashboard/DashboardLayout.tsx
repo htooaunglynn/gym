@@ -16,14 +16,29 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* Ambient background orbs mirroring auth pages */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none">
           <motion.div
-            className="absolute -left-20 -top-20 h-96 w-96 rounded-full bg-amber-400/10 blur-[100px] dark:bg-amber-400/5"
-            animate={{ x: [0, 50, 0], y: [0, 30, 0] }}
-            transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute -left-24 -top-24 h-[500px] w-[500px] rounded-full bg-amber-300/20 blur-[120px] dark:bg-amber-400/5"
+            animate={{ 
+              x: [0, 40, 0], 
+              y: [0, 60, 0],
+              scale: [1, 1.1, 1]
+            }}
+            transition={{ duration: 15, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
           />
           <motion.div
-            className="absolute right-0 bottom-0 h-[500px] w-[500px] rounded-full bg-sky-400/10 blur-[120px] dark:bg-sky-400/5"
-            animate={{ x: [0, -40, 0], y: [0, -20, 0] }}
-            transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute -right-24 bottom-0 h-[600px] w-[600px] rounded-full bg-sky-300/20 blur-[140px] dark:bg-sky-400/5"
+            animate={{ 
+              x: [0, -60, 0], 
+              y: [0, -40, 0],
+              scale: [1, 1.2, 1]
+            }}
+            transition={{ duration: 18, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
+          />
+          <motion.div
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[400px] w-[400px] rounded-full bg-pink-300/10 blur-[100px] dark:bg-pink-400/5"
+            animate={{ 
+              opacity: [0.3, 0.6, 0.3],
+            }}
+            transition={{ duration: 10, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
           />
         </div>
 
