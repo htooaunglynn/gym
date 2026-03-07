@@ -1,23 +1,14 @@
 import { type FormEvent, useState } from 'react'
 import { useSignIn } from '@clerk/react-router'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Loader2, RotateCw } from 'lucide-react'
 import { Link, useNavigate } from 'react-router'
 
-import { Button } from '@/components/ui/button'
 import { getClerkErrorMessage } from '@/features/auth/utils/clerk-errors'
-
-import { FeedbackMessage } from '@/components/shared/FeedbackMessage'
-import { FormInput } from '@/components/shared/forms/FormInput'
 import { LoadingState } from '@/components/shared/LoadingState'
-import { ClerkCaptcha } from './ClerkCaptcha'
+import { stepTransition } from '@/lib/motion-variants'
 
-const stepTransition = {
-  initial: { opacity: 0, y: 12 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -8 },
-  transition: { duration: 0.25, ease: 'easeOut' },
-} as const
+import { ForgotPasswordRequestStep } from './steps/ForgotPasswordRequestStep'
+import { ForgotPasswordResetStep } from './steps/ForgotPasswordResetStep'
 
 export function ForgotPasswordForm() {
   const navigate = useNavigate()
@@ -145,96 +136,46 @@ export function ForgotPasswordForm() {
   return (
     <div className="space-y-5">
       <AnimatePresence mode="wait">
-        {step === 'request' ? (
-          <motion.form key="request" className="space-y-4" onSubmit={requestResetCode} {...stepTransition}>
-            <FormInput
-              autoComplete="email"
-              label="Account email"
-              onChange={(event) => setEmail(event.target.value)}
-              placeholder="Enter your account email"
-              required
-              type="email"
-              value={email}
+        <motion.div
+          key={step}
+          variants={stepTransition}
+          initial="initial"
+          animate="animate"
+          exit="exit"
+          transition={{ duration: 0.25, ease: 'easeOut' }}
+        >
+          {step === 'request' ? (
+            <ForgotPasswordRequestStep
+              email={email}
+              errorMessage={errorMessage}
+              isSubmitting={isSubmitting}
+              onSubmit={requestResetCode}
+              setEmail={setEmail}
             />
-
-            <FeedbackMessage text={errorMessage} type="error" />
-            <ClerkCaptcha />
-
-            <Button
-              className="h-11 w-full rounded-xl bg-slate-900 text-base font-medium hover:bg-slate-800"
-              disabled={isSubmitting}
-              type="submit"
-            >
-              {isSubmitting ? <Loader2 className="size-4 animate-spin" /> : null}
-              {isSubmitting ? 'Sending code...' : 'Send reset code'}
-            </Button>
-          </motion.form>
-        ) : (
-          <motion.form key="reset" className="space-y-4" onSubmit={submitNewPassword} {...stepTransition}>
-            <FormInput
-              autoComplete="one-time-code"
-              label="Password reset code"
-              inputMode="numeric"
-              maxLength={6}
-              onChange={(event) => setCode(event.target.value)}
-              placeholder="Enter the 6-digit reset code"
-              required
-              type="text"
-              value={code}
+          ) : (
+            <ForgotPasswordResetStep
+              code={code}
+              confirmPassword={confirmPassword}
+              errorMessage={errorMessage}
+              isResending={isResending}
+              isSubmitting={isSubmitting}
+              newPassword={newPassword}
+              onResend={resendCode}
+              onSubmit={submitNewPassword}
+              setCode={setCode}
+              setConfirmPassword={setConfirmPassword}
+              setNewPassword={setNewPassword}
+              successMessage={successMessage}
             />
-
-            <FormInput
-              autoComplete="new-password"
-              label="New password"
-              onChange={(event) => setNewPassword(event.target.value)}
-              placeholder="Create a new password"
-              required
-              type="password"
-              value={newPassword}
-            />
-
-            <FormInput
-              autoComplete="new-password"
-              label="Confirm new password"
-              onChange={(event) => setConfirmPassword(event.target.value)}
-              placeholder="Repeat the new password"
-              required
-              type="password"
-              value={confirmPassword}
-            />
-
-            <FeedbackMessage text={successMessage} type="success" />
-            <FeedbackMessage text={errorMessage} type="error" />
-            <ClerkCaptcha />
-
-            <Button
-              className="h-11 w-full rounded-xl bg-slate-900 text-base font-medium hover:bg-slate-800"
-              disabled={isSubmitting}
-              type="submit"
-            >
-              {isSubmitting ? <Loader2 className="size-4 animate-spin" /> : null}
-              {isSubmitting ? 'Updating password...' : 'Reset password'}
-            </Button>
-
-            <Button
-              className="w-full rounded-xl"
-              disabled={isResending}
-              onClick={resendCode}
-              type="button"
-              variant="outline"
-            >
-              {isResending ? <RotateCw className="size-4 animate-spin" /> : null}
-              {isResending ? 'Resending code...' : 'Resend code'}
-            </Button>
-          </motion.form>
-        )}
+          )}
+        </motion.div>
       </AnimatePresence>
 
       <p className="flex items-center justify-between text-sm">
         <Link className="text-slate-600 transition hover:text-slate-900" to="/sign-in">
           Back to sign in
         </Link>
-        <Link className="font-medium text-amber-700 transition hover:text-amber-800" to="/sign-up">
+        <Link className="font-medium text-amber-700 dark:text-amber-500 transition hover:text-amber-800 dark:hover:text-amber-600" to="/sign-up">
           Create account
         </Link>
       </p>

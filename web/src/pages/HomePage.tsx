@@ -1,9 +1,9 @@
-import { SignOutButton, UserButton, useAuth } from '@clerk/react'
-import { motion } from 'framer-motion'
-import { LogOut } from 'lucide-react'
-import { Navigate, Link } from 'react-router'
+import { useAuth } from '@clerk/react'
+import { motion, AnimatePresence } from 'framer-motion'
 
-import { Button } from '@/components/ui/button'
+import { HeroSection } from '@/components/home/HeroSection'
+import { AuthActions } from '@/components/home/AuthActions'
+import { pageTransition } from '@/lib/motion-variants'
 
 export default function HomePage() {
   const { isLoaded, isSignedIn } = useAuth()
@@ -12,72 +12,26 @@ export default function HomePage() {
     return null
   }
 
-  if (isSignedIn) {
-    return <Navigate replace to="/admin" />
-  }
-
   return (
-    <main className="min-h-dvh bg-[linear-gradient(140deg,#eff6ff_0%,#fffbeb_50%,#f8fafc_100%)] p-4 sm:p-8">
-      <motion.section
-        className="mx-auto flex min-h-[calc(100dvh-2rem)] max-w-4xl flex-col rounded-3xl border border-white/60 bg-white/80 p-6 shadow-xl shadow-slate-900/5 backdrop-blur-xl sm:min-h-[calc(100dvh-4rem)] sm:p-10"
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: 'easeOut' }}
-      >
-        <header className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-sm uppercase tracking-[0.2em] text-slate-500">Dashboard</p>
-            <h1 className="mt-2 text-3xl font-semibold text-slate-900 sm:text-4xl">Welcome back</h1>
-            <p className="mt-3 max-w-xl text-sm text-slate-600 sm:text-base">
-              Your custom Clerk auth pages are live. Continue building the gym product from this
-              protected area.
-            </p>
-          </div>
+    <main className="flex min-h-dvh items-center justify-center bg-[linear-gradient(140deg,#eff6ff_0%,#fffbeb_50%,#f8fafc_100%)] p-4 sm:p-8">
+      <AnimatePresence mode="wait">
+        <motion.section
+          key={isSignedIn ? 'signed-in' : 'signed-out'}
+          variants={pageTransition}
+          initial="initial"
+          animate="animate"
+          exit="exit"
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          className="relative w-full max-w-lg overflow-hidden rounded-[2.5rem] border border-white/60 bg-white/70 p-8 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] backdrop-blur-2xl sm:p-12"
+        >
+          {/* Decorative background elements */}
+          <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-blue-100/30 blur-3xl animate-pulse" />
+          <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-amber-100/30 blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
 
-          <UserButton />
-        </header>
-
-        <div className="mt-8 grid gap-4 sm:grid-cols-2">
-          <div className="rounded-2xl border border-slate-200 bg-white p-5">
-            <h2 className="text-lg font-semibold text-slate-900">Auth routes</h2>
-            <p className="mt-2 text-sm text-slate-600">Open these pages to view custom flows.</p>
-            <ul className="mt-4 space-y-2 text-sm">
-              <li>
-                <Link className="text-amber-700 hover:text-amber-800" to="/sign-in">
-                  /sign-in
-                </Link>
-              </li>
-              <li>
-                <Link className="text-amber-700 hover:text-amber-800" to="/sign-up">
-                  /sign-up
-                </Link>
-              </li>
-              <li>
-                <Link className="text-amber-700 hover:text-amber-800" to="/forgot-password">
-                  /forgot-password
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-5">
-            <h2 className="text-lg font-semibold text-slate-900">Account actions</h2>
-            <p className="mt-2 text-sm text-slate-600">
-              Use Clerk components for session-level controls where needed.
-            </p>
-
-            <SignOutButton>
-              <Button
-                className="mt-5 h-10 rounded-xl bg-slate-900 px-4 text-sm hover:bg-slate-800"
-                type="button"
-              >
-                <LogOut className="size-4" />
-                Sign out
-              </Button>
-            </SignOutButton>
-          </div>
-        </div>
-      </motion.section>
+          <HeroSection isSignedIn={isSignedIn} />
+          <AuthActions isSignedIn={isSignedIn} />
+        </motion.section>
+      </AnimatePresence>
     </main>
   )
 }

@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { slideUp } from '@/lib/motion-variants'
 
 const dots = [0, 1, 2]
 
@@ -16,9 +17,9 @@ export function LoadingState({
   return (
     <motion.div
       className="space-y-5"
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, ease: 'easeOut' }}
+      variants={slideUp}
+      initial="initial"
+      animate="animate"
     >
       <div className="space-y-2">
         <p className="text-base font-semibold text-slate-900">{title}</p>

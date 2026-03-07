@@ -4,6 +4,7 @@ import { SidebarProvider } from "./SidebarProvider"
 import { Sidebar } from "./Sidebar"
 import { Topbar } from "./Topbar"
 import { VerificationBanner } from "@/features/dashboard/components/VerificationBanner"
+import { slideUp } from "@/lib/motion-variants"
 
 type DashboardLayoutProps = {
   children: ReactNode
@@ -55,9 +56,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <AnimatePresence mode="wait">
               <motion.div
                 key={window.location.pathname}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
+                variants={slideUp}
+                initial="initial"
+                animate="animate"
+                exit="exit"
                 transition={{ duration: 0.3, ease: "easeOut" }}
                 className="mx-auto max-w-7xl"
               >

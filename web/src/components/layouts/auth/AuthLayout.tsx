@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { motion } from 'framer-motion'
+import { fadeIn, slideUp } from '@/lib/motion-variants'
 
 type AuthLayoutProps = {
   title: string
@@ -27,8 +28,9 @@ export function AuthLayout({ title, subtitle, children }: AuthLayoutProps) {
       <div className="relative mx-auto flex min-h-dvh w-full max-w-lg items-center px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
         <motion.section
           className="z-10 w-full flex items-center"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          variants={slideUp}
+          initial="initial"
+          animate="animate"
           transition={{ duration: 0.5, ease: 'easeOut' }}
         >
           <div className="w-full rounded-3xl border border-white/60 bg-white/80 p-6 shadow-xl shadow-slate-900/5 backdrop-blur-xl sm:p-8">
@@ -40,7 +42,15 @@ export function AuthLayout({ title, subtitle, children }: AuthLayoutProps) {
               <p className="text-sm text-slate-600 sm:text-base">{subtitle}</p>
             </div>
 
-            <div className="min-h-[20rem] sm:min-h-[22rem]">{children}</div>
+            <motion.div 
+              variants={fadeIn}
+              initial="initial"
+              animate="animate"
+              transition={{ delay: 0.2 }}
+              className="min-h-[20rem] sm:min-h-[22rem]"
+            >
+              {children}
+            </motion.div>
           </div>
         </motion.section>
       </div>
