@@ -23,13 +23,44 @@ model User {
     createdAt DateTime @default(now()) @map("created_at")
     updatedAt DateTime @updatedAt @map("updated_at")
 
+    age    Int?
+    gender Gender? @map("gender")
+    height Int?
+    weight Int?
+
+    dateOfBirth DateTime? @map("date_of_birth")
+
+    passwordResetCode   String?   @map("password_reset_code")
+    passwordResetExpiry DateTime? @map("password_reset_expiry")
+
+    refreshTokens RefreshToken[]
+
     // Composite index for cursor-based pagination (ORDER BY created_at DESC)
     // and covering the id column so Postgres can do index-only scans.
     @@index([createdAt(sort: Desc), id])
     @@map("users")
 }
 
+model RefreshToken {
+    id        String   @id @default(uuid())
+    token     String   @unique
+    userId    String   @map("user_id")
+    expiresAt DateTime @map("expires_at")
+    createdAt DateTime @default(now()) @map("created_at")
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@index([userId])
+    @@map("refresh_tokens")
+}
+
 enum Role {
     ADMIN
     MEMBER
+}
+
+enum Gender {
+    MALE
+    FEMALE
+    OTHER
 }

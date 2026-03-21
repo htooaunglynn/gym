@@ -1,37 +1,22 @@
-import { useAuth } from '@clerk/react'
 import { Navigate } from 'react-router'
 
 import { AuthLayout } from '@/components/layouts/auth/AuthLayout'
-import { LoadingState } from '@/components/shared/LoadingState'
 import { ForgotPasswordForm } from '@/features/auth/components/ForgotPasswordForm'
+import { useAuthStore } from '@/store/auth-store'
 
 export default function ForgotPasswordPage() {
-  const { isLoaded, isSignedIn } = useAuth()
+    const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
 
-  if (!isLoaded) {
+    if (isAuthenticated) {
+        return <Navigate replace to="/" />
+    }
+
     return (
-      <AuthLayout
-        subtitle="Recover access to your account in two quick steps."
-        title="Forgot password"
-      >
-        <LoadingState
-          subtitle="Loading password recovery controls..."
-          title="Preparing password reset"
-        />
-      </AuthLayout>
+        <AuthLayout
+            subtitle="Recover access to your account in two quick steps."
+            title="Forgot password"
+        >
+            <ForgotPasswordForm />
+        </AuthLayout>
     )
-  }
-
-  if (isSignedIn) {
-    return <Navigate replace to="/" />
-  }
-
-  return (
-    <AuthLayout
-      subtitle="Recover access to your account in two quick steps."
-      title="Forgot password"
-    >
-      <ForgotPasswordForm />
-    </AuthLayout>
-  )
 }

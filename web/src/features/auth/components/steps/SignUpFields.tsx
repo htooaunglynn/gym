@@ -1,4 +1,3 @@
-import { useSignUp } from '@clerk/react'
 import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { FormInput } from '@/components/shared/forms/FormInput'
@@ -6,92 +5,92 @@ import { FeedbackMessage } from '@/components/shared/FeedbackMessage'
 import { SocialSignInButtons } from '../SocialSignInButtons'
 
 interface SignUpFieldsProps {
-  username: string
-  setUsername: (value: string) => void
-  email: string
-  setEmail: (value: string) => void
-  password: string
-  setPassword: (value: string) => void
-  confirmPassword: string
-  setConfirmPassword: (value: string) => void
-  isSubmitting: boolean
-  errorMessage: string
-  auth: ReturnType<typeof useSignUp>['signUp']
+    username: string
+    setUsername: (value: string) => void
+    email: string
+    setEmail: (value: string) => void
+    password: string
+    setPassword: (value: string) => void
+    confirmPassword: string
+    setConfirmPassword: (value: string) => void
+    isSubmitting: boolean
+    errorMessage: string
+    onSocialError: (message: string) => void
 }
 
 export function SignUpFields({
-  username,
-  setUsername,
-  email,
-  setEmail,
-  password,
-  setPassword,
-  confirmPassword,
-  setConfirmPassword,
-  isSubmitting,
-  errorMessage,
-  auth,
+    username,
+    setUsername,
+    email,
+    setEmail,
+    password,
+    setPassword,
+    confirmPassword,
+    setConfirmPassword,
+    isSubmitting,
+    errorMessage,
+    onSocialError,
 }: SignUpFieldsProps) {
-  return (
-    <div className="space-y-4">
-      <SocialSignInButtons auth={auth} disabled={isSubmitting} onError={() => {}} />
+    return (
+        <div className="space-y-4">
+            <SocialSignInButtons disabled={isSubmitting} onError={onSocialError} />
 
-      <div className="flex items-center gap-3 text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
-        <span className="h-px flex-1 bg-slate-200" />
-        <span>or use email</span>
-        <span className="h-px flex-1 bg-slate-200" />
-      </div>
+            <div className="flex items-center gap-3 text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
+                <span className="h-px flex-1 bg-slate-200" />
+                <span>or use email</span>
+                <span className="h-px flex-1 bg-slate-200" />
+            </div>
 
-      <FormInput
-        autoComplete="username"
-        label="Username"
-        onChange={(event) => setUsername(event.target.value)}
-        placeholder="Choose a unique username"
-        required
-        type="text"
-        value={username}
-      />
+            <FormInput
+                autoComplete="username"
+                label="Username"
+                onChange={(event) => setUsername(event.target.value)}
+                placeholder="Choose a unique username"
+                required
+                type="text"
+                value={username}
+            />
 
-      <FormInput
-        autoComplete="email"
-        label="Email address"
-        onChange={(event) => setEmail(event.target.value)}
-        placeholder="Enter your email address"
-        required
-        type="email"
-        value={email}
-      />
+            <FormInput
+                autoComplete="email"
+                label="Email address"
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="Enter your email address"
+                required
+                type="email"
+                value={email}
+            />
 
-      <FormInput
-        autoComplete="new-password"
-        label="Create password"
-        onChange={(event) => setPassword(event.target.value)}
-        placeholder="Create a strong password"
-        required
-        type="password"
-        value={password}
-      />
+            <FormInput
+                autoComplete="new-password"
+                label="Create password"
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="Create a strong password"
+                required
+                type="password"
+                value={password}
+            />
 
-      <FormInput
-        autoComplete="new-password"
-        label="Confirm password"
-        onChange={(event) => setConfirmPassword(event.target.value)}
-        placeholder="Repeat your password"
-        required
-        type="password"
-        value={confirmPassword}
-      />
+            <FormInput
+                autoComplete="new-password"
+                label="Confirm password"
+                onChange={(event) => setConfirmPassword(event.target.value)}
+                placeholder="Repeat your password"
+                required
+                type="password"
+                value={confirmPassword}
+            />
 
-      <FeedbackMessage text={errorMessage} type="error" />
+            <FeedbackMessage text={errorMessage} type="error" />
 
-      <Button
-        className="h-11 w-full rounded-xl bg-slate-900 text-base font-medium hover:bg-slate-800 dark:bg-amber-500 dark:hover:bg-amber-600"
-        disabled={isSubmitting}
-        type="submit"
-      >
-        {isSubmitting ? <Loader2 className="size-4 animate-spin" /> : null}
-        {isSubmitting ? 'Creating account...' : 'Create account'}
-      </Button>
-    </div>
-  )
+            <Button
+                className="h-11 w-full rounded-xl bg-slate-900 text-base font-medium hover:bg-slate-800 dark:bg-amber-500 dark:hover:bg-amber-600"
+                disabled={isSubmitting}
+                type="submit"
+            >
+                {isSubmitting ? <Loader2 className="size-4 animate-spin" /> : null}
+                {isSubmitting ? 'Creating account...' : 'Create account'}
+            </Button>
+        </div>
+    )
 }

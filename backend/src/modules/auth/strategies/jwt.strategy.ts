@@ -1,27 +1,37 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { Strategy } from 'passport-custom';
-import type { Request } from 'express';
+import { Strategy, ExtractJwt } from 'passport-jwt';
 import type { AuthenticatedUser } from '../interfaces/index.js';
-import { AuthService } from '../auth.service.js';
+import type { JwtPayload } from '../token.service.js';
+import { UsersService } from '../../users/users.service.js';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
-  constructor(private readonly authService: AuthService) {
-    super();
-  }
+    constructor(private readonly usersService: UsersService) {
+        const secret = process.env.JWT_SECRET;
+        if (!secret) {
+            throw new Error('Missing required env var JWT_SECRET');
+        }
 
-  async validate(request: Request): Promise<AuthenticatedUser> {
-    const authorizationHeader = request.headers.authorization;
-    if (!authorizationHeader) {
-      throw new UnauthorizedException('Missing Authorization header');
+        super({
+            jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+            secretOrKey: secret,
+            ignoreExpiration: false,
+        });
     }
 
-    const [scheme, token] = authorizationHeader.split(' ');
-    if (scheme !== 'Bearer' || !token) {
-      throw new UnauthorizedException('Malformed Authorization header');
-    }
+    async validate(payload: JwtPayload): Promise<AuthenticatedUser> {
+        const user = await this.usersService.findById(payload.sub);
+        if (!user) {
+            throw new UnauthorizedException('User not found');
+        }
 
-    return this.authService.authenticateWithToken(token);
-  }
+        return {
+            id: user.id,
+            clerkId: user.clerkId,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+        };
+    }
 }

@@ -7,6 +7,12 @@
     "type": "module",
     "license": "UNLICENSED",
     "scripts": {
+        "prisma:generate": "prisma generate",
+        "prisma:seed": "prisma db seed",
+        "prestart": "npm run prisma:generate",
+        "prestart:dev": "npm run prisma:generate",
+        "prestart:debug": "npm run prisma:generate",
+        "prebuild": "npm run prisma:generate",
         "build": "nest build",
         "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
         "start": "nest start",
@@ -46,6 +52,7 @@
         "pg": "^8.19.0",
         "pino-http": "^11.0.0",
         "reflect-metadata": "^0.2.2",
+        "resend": "^6.9.4",
         "rxjs": "^7.8.1"
     },
     "devDependencies": {

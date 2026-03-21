@@ -7,6 +7,7 @@ import { LoggerModule } from './core/logger/logger.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { UsersModule } from './modules/users/users.module.js';
+import { MembersModule } from './modules/members/members.module.js';
 import { JwtAuthGuard, RolesGuard } from './modules/auth/guards/index.js';
 import { ApiKeyGuard } from './core/guards/index.js';
 import { GlobalExceptionFilter } from './core/filters/index.js';
@@ -28,6 +29,7 @@ import { ResponseTransformInterceptor } from './core/interceptors/index.js';
     PrismaModule,
     AuthModule,
     UsersModule,
+    MembersModule,
   ],
   controllers: [AppController],
   providers: [

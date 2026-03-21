@@ -52,6 +52,7 @@ async function bootstrap() {
       .setDescription('Gym backend API documentation')
       .setVersion('1.0')
       .addBearerAuth()
+      .addBasicAuth()
       .addApiKey({ type: 'apiKey', name: 'x-api-key', in: 'header' }, 'api-key')
       .build();
     const document = SwaggerModule.createDocument(app, swaggerConfig);
