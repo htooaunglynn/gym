@@ -23,6 +23,10 @@ export interface AuthTokens {
 
 const BCRYPT_ROUNDS = 12;
 const RESET_CODE_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
+const INVALID_EMAIL_OR_PASSWORD_MESSAGE = 'Invalid email or password';
+const PASSWORD_RESET_NOT_REQUESTED_MESSAGE = 'No password reset was requested';
+const RESET_CODE_EXPIRED_MESSAGE = 'Reset code has expired';
+const INVALID_RESET_CODE_MESSAGE = 'Invalid reset code';
 
 @Injectable()
 export class AuthService {
@@ -35,9 +39,8 @@ export class AuthService {
 
     // ── Email / Password Sign-Up ──────────────────────────────────────
     async signUp(dto: SignUpDto): Promise<AuthTokens> {
-        const existing = await this.usersService.findByEmail(
-            dto.email.toLowerCase(),
-        );
+        const normalizedEmail = this.normalizeEmail(dto.email);
+        const existing = await this.usersService.findByEmail(normalizedEmail);
         if (existing) {
             throw new ConflictException('Email is already in use');
         }
@@ -45,7 +48,7 @@ export class AuthService {
         const hashedPassword = await hash(dto.password, BCRYPT_ROUNDS);
 
         const user = await this.usersService.create({
-            email: dto.email.toLowerCase(),
+            email: normalizedEmail,
             password: hashedPassword,
             name: dto.name ?? null,
         });
@@ -55,14 +58,16 @@ export class AuthService {
 
     // ── Email / Password Sign-In ──────────────────────────────────────
     async signIn(dto: SignInDto): Promise<AuthTokens> {
-        const user = await this.usersService.findByEmail(dto.email.toLowerCase());
+        const user = await this.usersService.findByEmail(
+            this.normalizeEmail(dto.email),
+        );
         if (!user || !user.password) {
-            throw new UnauthorizedException('Invalid email or password');
+            throw new UnauthorizedException(INVALID_EMAIL_OR_PASSWORD_MESSAGE);
         }
 
         const valid = await compare(dto.password, user.password);
         if (!valid) {
-            throw new UnauthorizedException('Invalid email or password');
+            throw new UnauthorizedException(INVALID_EMAIL_OR_PASSWORD_MESSAGE);
         }
 
         return this.issueTokens(this.toAuthenticatedUser(user));
@@ -87,10 +92,7 @@ export class AuthService {
         const userId =
             await this.tokenService.verifyRefreshToken(rawRefreshToken);
 
-        const user = await this.usersService.findById(userId);
-        if (!user) {
-            throw new UnauthorizedException('User not found');
-        }
+        const user = await this.getUserOrThrow(userId);
 
         const accessToken = this.tokenService.generateAccessToken(
             this.toAuthenticatedUser(user),
@@ -100,18 +102,17 @@ export class AuthService {
 
     // ── Forgot Password ──────────────────────────────────────────────
     async forgotPassword(email: string): Promise<void> {
-        const user = await this.usersService.findByEmail(email.toLowerCase());
+        const user = await this.usersService.findByEmail(this.normalizeEmail(email));
         if (!user) {
             // Don't reveal whether the email exists
             return;
         }
 
-        const code = String(randomInt(100000, 999999));
-        const hashedCode = createHash('sha256').update(code).digest('hex');
+        const { code, hashedCode, expiresAt } = this.createPasswordResetCode();
 
         await this.usersService.updateById(user.id, {
             passwordResetCode: hashedCode,
-            passwordResetExpiry: new Date(Date.now() + RESET_CODE_EXPIRY_MS),
+            passwordResetExpiry: expiresAt,
         });
 
         await this.emailService.sendPasswordResetCode(user.email, code);
@@ -123,23 +124,12 @@ export class AuthService {
         code: string,
         newPassword: string,
     ): Promise<void> {
-        const user = await this.usersService.findByEmail(email.toLowerCase());
+        const user = await this.usersService.findByEmail(this.normalizeEmail(email));
         if (!user) {
             throw new UnauthorizedException('Invalid reset request');
         }
 
-        if (!user.passwordResetCode || !user.passwordResetExpiry) {
-            throw new UnauthorizedException('No password reset was requested');
-        }
-
-        if (user.passwordResetExpiry < new Date()) {
-            throw new UnauthorizedException('Reset code has expired');
-        }
-
-        const hashedCode = createHash('sha256').update(code).digest('hex');
-        if (hashedCode !== user.passwordResetCode) {
-            throw new UnauthorizedException('Invalid reset code');
-        }
+        this.assertPasswordResetCodeIsValid(user, code);
 
         const hashedPassword = await hash(newPassword, BCRYPT_ROUNDS);
 
@@ -160,51 +150,128 @@ export class AuthService {
 
     // ── Get user profile (for GET /auth/me) ───────────────────────────
     async getProfile(userId: string): Promise<AuthenticatedUser> {
-        const user = await this.usersService.findById(userId);
-        if (!user) {
-            throw new UnauthorizedException('User not found');
-        }
+        const user = await this.getUserOrThrow(userId);
         return this.toAuthenticatedUser(user);
     }
 
     // ── Clerk User Sync (used by socialAuth) ──────────────────────────
     private async syncUserFromClerk(clerkId: string): Promise<AuthenticatedUser> {
         const clerkUser = await this.clerkAuthService.getUser(clerkId);
-        const email = this.extractPrimaryEmail(clerkUser).toLowerCase();
+        const email = this.normalizeEmail(this.extractPrimaryEmail(clerkUser));
         const name = this.extractDisplayName(clerkUser);
 
         const userByClerkId = await this.usersService.findByClerkId(clerkId);
         if (userByClerkId) {
-            const emailChanged = userByClerkId.email !== email;
-            const nameChanged = userByClerkId.name !== name;
-
-            if (emailChanged || nameChanged) {
-                const updated = await this.usersService.updateById(userByClerkId.id, {
-                    email,
-                    name,
-                });
-                return this.toAuthenticatedUser(updated);
-            }
-
-            return this.toAuthenticatedUser(userByClerkId);
+            return this.syncExistingClerkLinkedUser(userByClerkId, email, name);
         }
 
         const userByEmail = await this.usersService.findByEmail(email);
         if (userByEmail) {
-            if (userByEmail.clerkId && userByEmail.clerkId !== clerkId) {
-                throw new ConflictException(
-                    'Email is already linked to another account',
-                );
-            }
-
-            const linkedUser = await this.usersService.updateById(userByEmail.id, {
-                clerkId,
-                name,
-            });
-
-            return this.toAuthenticatedUser(linkedUser);
+            return this.linkExistingEmailUser(userByEmail, clerkId, name);
         }
 
+        return this.createSocialUser(clerkId, email, name);
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────
+    private async issueTokens(user: AuthenticatedUser): Promise<AuthTokens> {
+        const accessToken = this.tokenService.generateAccessToken(user);
+        const refreshToken = await this.tokenService.generateRefreshToken(user.id);
+        return { accessToken, refreshToken, user };
+    }
+
+    private createPasswordResetCode(): {
+        code: string;
+        hashedCode: string;
+        expiresAt: Date;
+    } {
+        const code = String(randomInt(100000, 999999));
+        return {
+            code,
+            hashedCode: this.hashValue(code),
+            expiresAt: new Date(Date.now() + RESET_CODE_EXPIRY_MS),
+        };
+    }
+
+    private assertPasswordResetCodeIsValid(
+        user: {
+            passwordResetCode: string | null;
+            passwordResetExpiry: Date | null;
+        },
+        code: string,
+    ): void {
+        if (!user.passwordResetCode || !user.passwordResetExpiry) {
+            throw new UnauthorizedException(PASSWORD_RESET_NOT_REQUESTED_MESSAGE);
+        }
+
+        if (user.passwordResetExpiry < new Date()) {
+            throw new UnauthorizedException(RESET_CODE_EXPIRED_MESSAGE);
+        }
+
+        if (this.hashValue(code) !== user.passwordResetCode) {
+            throw new UnauthorizedException(INVALID_RESET_CODE_MESSAGE);
+        }
+    }
+
+    private normalizeEmail(email: string): string {
+        return email.toLowerCase();
+    }
+
+    private async getUserOrThrow(userId: string) {
+        const user = await this.usersService.findById(userId);
+        if (!user) {
+            throw new UnauthorizedException('User not found');
+        }
+        return user;
+    }
+
+    private async syncExistingClerkLinkedUser(
+        user: {
+            id: string;
+            clerkId: string | null;
+            email: string;
+            name: string | null;
+            role: AuthenticatedUser['role'];
+        },
+        email: string,
+        name: string | null,
+    ): Promise<AuthenticatedUser> {
+        const emailChanged = user.email !== email;
+        const nameChanged = user.name !== name;
+
+        if (!emailChanged && !nameChanged) {
+            return this.toAuthenticatedUser(user);
+        }
+
+        const updated = await this.usersService.updateById(user.id, { email, name });
+        return this.toAuthenticatedUser(updated);
+    }
+
+    private async linkExistingEmailUser(
+        user: {
+            id: string;
+            clerkId: string | null;
+        },
+        clerkId: string,
+        name: string | null,
+    ): Promise<AuthenticatedUser> {
+        if (user.clerkId && user.clerkId !== clerkId) {
+            throw new ConflictException('Email is already linked to another account');
+        }
+
+        const linkedUser = await this.usersService.updateById(user.id, {
+            clerkId,
+            name,
+        });
+
+        return this.toAuthenticatedUser(linkedUser);
+    }
+
+    private async createSocialUser(
+        clerkId: string,
+        email: string,
+        name: string | null,
+    ): Promise<AuthenticatedUser> {
         const createdUser = await this.usersService.create({
             clerkId,
             email,
@@ -215,11 +282,8 @@ export class AuthService {
         return this.toAuthenticatedUser(createdUser);
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────
-    private async issueTokens(user: AuthenticatedUser): Promise<AuthTokens> {
-        const accessToken = this.tokenService.generateAccessToken(user);
-        const refreshToken = await this.tokenService.generateRefreshToken(user.id);
-        return { accessToken, refreshToken, user };
+    private hashValue(value: string): string {
+        return createHash('sha256').update(value).digest('hex');
     }
 
     private extractPrimaryEmail(user: ClerkBackendUser): string {

@@ -39,7 +39,7 @@ export class TokenService {
             data: {
                 token: hashed,
                 userId,
-                expiresAt: new Date(Date.now() + this.refreshExpirationMs),
+                expiresAt: this.getRefreshExpiryDate(),
             },
         });
 
@@ -80,5 +80,9 @@ export class TokenService {
 
     private hashToken(token: string): string {
         return createHash('sha256').update(token).digest('hex');
+    }
+
+    private getRefreshExpiryDate(): Date {
+        return new Date(Date.now() + this.refreshExpirationMs);
     }
 }

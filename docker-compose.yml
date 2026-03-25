@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: gym-db
+    environment:
+      POSTGRES_USER: htooaunglynn
+      POSTGRES_DB: gym_db
+      # If you want a password, set it here and in backend/.env, else use trust for local dev
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U htooaunglynn -d gym_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: gym-backend
+    ports:
+      - "3000:3000"
+    environment:
+      # Override the DATABASE_URL to use the docker network 'db' host
+      DATABASE_URL: "postgresql://htooaunglynn@db:5432/gym_db"
+    env_file:
+      - ./backend/.env
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: always
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+      args:
+        # These are passed to Vite during the build stage
+        - VITE_API_BASE_URL=http://localhost:3000/api/v1
+    container_name: gym-web
+    ports:
+      - "5173:80" # Mapping to standard 5173 for local familiarity, but inside container is 80
+    env_file:
+      - ./web/.env
+    depends_on:
+      - backend
+    restart: always
+
+volumes:
+  pgdata:
